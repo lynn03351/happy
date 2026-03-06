@@ -5,12 +5,18 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  // 재연결 시 같은 소켓 ID 유지 방지 & 핑 설정
+  pingTimeout: 10000,
+  pingInterval: 5000,
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 const players = {};
 
 io.on('connection', (socket) => {
+  // 이미 4명이면 거절
   const count = Object.keys(players).length;
   if (count >= 4) { socket.emit('full'); socket.disconnect(); return; }
 
@@ -26,6 +32,8 @@ io.on('connection', (socket) => {
     emote: '', jumpOffset: 0, hitCount: 0
   };
 
+  console.log(`접속: ${socket.id} (총 ${Object.keys(players).length}명)`);
+
   socket.emit('init', { id: socket.id, players });
   socket.broadcast.emit('playerJoined', players[socket.id]);
 
@@ -40,25 +48,6 @@ io.on('connection', (socket) => {
     socket.broadcast.emit('playerEmote', { id: socket.id, emote });
   });
 
-  socket.on('push', ({ targetId, vx, vy }) => {
-    if (!players[socket.id] || !players[targetId]) return;
-    io.to(targetId).emit('playerPushed', { id: targetId, vx, vy });
-    socket.broadcast.emit('playerPushed', { id: targetId, vx, vy });
-  });
-
-  socket.on('bullet_hit', ({ targetId }) => {
-    if (!players[socket.id] || !players[targetId]) return;
-    const p = players[targetId];
-    p.hitCount = (p.hitCount || 0) + 1;
-    const vx = (players[socket.id].facing || 1) * 9;
-    io.to(targetId).emit('playerPushed', { id: targetId, vx, vy: -3, isHit: true });
-    socket.broadcast.emit('playerPushed', { id: targetId, vx, vy: -3, isHit: true });
-    // 리스폰
-    io.to(targetId).emit('respawn', { id: targetId });
-    socket.broadcast.emit('respawn', { id: targetId });
-    if (players[targetId]) { players[targetId].x = 280 + Math.random()*80; players[targetId].y = 180 + Math.random()*60; players[targetId].hitCount = 0; }
-  });
-
   socket.on('push_hit', ({ targetId, vx, vy }) => {
     if (!players[socket.id] || !players[targetId]) return;
     const p = players[targetId];
@@ -66,17 +55,29 @@ io.on('connection', (socket) => {
     io.to(targetId).emit('playerPushed', { id: targetId, vx, vy, isHit: true });
     socket.broadcast.emit('playerPushed', { id: targetId, vx, vy, isHit: true });
     if (p.hitCount >= 5) {
-      io.to(targetId).emit('respawn', { id: targetId });
-      socket.broadcast.emit('respawn', { id: targetId });
-      if (players[targetId]) { players[targetId].x = 280; players[targetId].y = 190; players[targetId].hitCount = 0; }
+      io.emit('respawn', { id: targetId });
+      if (players[targetId]) { players[targetId].x=280; players[targetId].y=190; players[targetId].hitCount=0; }
     }
+  });
+
+  socket.on('bullet_spawn', (data) => {
+    if (!players[socket.id]) return;
+    socket.broadcast.emit('bullet_spawn', { ...data, id: socket.id });
+  });
+
+  socket.on('bullet_hit', ({ targetId }) => {
+    if (!players[socket.id] || !players[targetId]) return;
+    const vx = (players[socket.id].facing || 1) * 9;
+    io.to(targetId).emit('playerPushed', { id: targetId, vx, vy: -3, isHit: true });
+    socket.broadcast.emit('playerPushed', { id: targetId, vx, vy: -3, isHit: true });
+    io.emit('respawn', { id: targetId });
+    if (players[targetId]) { players[targetId].x=280+Math.random()*80; players[targetId].y=180+Math.random()*60; players[targetId].hitCount=0; }
   });
 
   socket.on('chat', (msg) => {
     if (!players[socket.id]) return;
     const p = players[socket.id];
-    const clean = String(msg).slice(0, 40);
-    io.emit('chat', { id: socket.id, name: p.name, msg: clean, color: p.color });
+    io.emit('chat', { id: socket.id, name: p.name, msg: String(msg).slice(0,40), color: p.color });
   });
 
   socket.on('setName', (name) => {
@@ -85,7 +86,8 @@ io.on('connection', (socket) => {
     io.emit('playerName', { id: socket.id, name: players[socket.id].name });
   });
 
-  socket.on('disconnect', () => {
+  socket.on('disconnect', (reason) => {
+    console.log(`퇴장: ${socket.id} (${reason}) / 남은 인원: ${Object.keys(players).length - 1}명`);
     delete players[socket.id];
     io.emit('playerLeft', socket.id);
   });
