@@ -2,12 +2,15 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>아지트 🏠</title>
 <script src="/socket.io/socket.io.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Gothic:wght@400;700&display=swap');
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
   body {
     background: #1a1a2e;
     font-family: 'Nanum Gothic', sans-serif;
@@ -15,84 +18,155 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    width: 100vw;
     height: 100vh;
     overflow: hidden;
     user-select: none;
+    touch-action: none;
   }
+
   h1 {
     font-family: 'Jua', sans-serif;
     color: #e0d7ff;
-    font-size: 1.6rem;
-    margin-bottom: 10px;
+    font-size: 1.2rem;
+    margin-bottom: 8px;
     letter-spacing: 2px;
     text-shadow: 0 0 20px #a78bfa88;
   }
+
   #game-wrap {
     position: relative;
-    border-radius: 20px;
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 0 60px #6d28d966, 0 0 0 2px #7c3aed44;
+    box-shadow: 0 0 40px #6d28d966, 0 0 0 2px #7c3aed44;
   }
+
   canvas { display: block; }
+
   #ui {
-    margin-top: 12px;
+    margin-top: 8px;
     display: flex;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
     flex-wrap: wrap;
     justify-content: center;
   }
+
   .hint {
     background: #2d1b69;
     color: #c4b5fd;
     border: 1px solid #7c3aed55;
     border-radius: 8px;
-    padding: 6px 14px;
-    font-size: 0.8rem;
+    padding: 4px 12px;
+    font-size: 0.75rem;
     font-family: 'Jua', sans-serif;
   }
+
   #name-input {
     background: #2d1b69;
     color: #e0d7ff;
     border: 1px solid #7c3aed88;
     border-radius: 8px;
-    padding: 6px 12px;
-    font-size: 0.85rem;
+    padding: 5px 10px;
+    font-size: 0.8rem;
     font-family: 'Jua', sans-serif;
     outline: none;
-    width: 120px;
+    width: 110px;
   }
+
   #player-count {
     background: #1e3a5f;
     color: #93c5fd;
     border-radius: 8px;
-    padding: 6px 14px;
-    font-size: 0.8rem;
+    padding: 4px 12px;
+    font-size: 0.75rem;
     font-family: 'Jua', sans-serif;
   }
-  #dpad {
+
+  /* ── 조이스틱 ── */
+  #joystick-zone {
+    position: fixed;
+    bottom: 28px;
+    left: 28px;
+    width: 120px;
+    height: 120px;
     display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  #joystick-base {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: rgba(124, 58, 237, 0.18);
+    border: 2px solid rgba(167, 139, 250, 0.4);
     position: absolute;
-    bottom: 16px;
-    left: 16px;
-    grid-template-columns: repeat(3, 44px);
-    grid-template-rows: repeat(3, 44px);
-    gap: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
-  .dpad-btn {
-    background: #2d1b6988;
-    border: 1px solid #7c3aed55;
-    border-radius: 8px;
-    color: #c4b5fd;
-    font-size: 1.2rem;
-    display: flex; align-items: center; justify-content: center;
+
+  #joystick-knob {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #a78bfa, #6d28d9);
+    box-shadow: 0 4px 16px rgba(109,40,217,0.6);
+    position: absolute;
+    pointer-events: none;
+  }
+
+  /* ── 오른쪽 버튼들 ── */
+  #right-buttons {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    display: none;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+    z-index: 100;
+  }
+
+  .action-btn {
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
+    font-size: 1.5rem;
+    transition: transform 0.1s;
   }
-  .dpad-btn:active { background: #6d28d9aa; }
-  .dpad-empty { background: transparent; border: none; }
-  @media (max-width: 680px) {
-    #dpad { display: grid; }
+
+  .action-btn:active { transform: scale(0.9); }
+
+  #emote-btn {
+    width: 58px;
+    height: 58px;
+    background: rgba(30, 58, 95, 0.85);
+    box-shadow: 0 4px 16px rgba(30,58,95,0.5);
+  }
+
+  #jump-btn {
+    width: 72px;
+    height: 72px;
+    background: radial-gradient(circle at 35% 35%, #f87171, #dc2626);
+    box-shadow: 0 4px 20px rgba(220,38,38,0.5);
+    font-family: 'Jua', sans-serif;
+    font-size: 1rem;
+    color: white;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  @media (max-width: 900px) {
+    h1 { display: none; }
+    #ui .hint { display: none; }
+    #joystick-zone { display: flex; }
+    #right-buttons { display: flex; }
   }
 </style>
 </head>
@@ -101,32 +175,49 @@
 <h1>🏠 우리들의 아지트</h1>
 
 <div id="game-wrap">
-  <canvas id="canvas" width="640" height="400"></canvas>
-  <div id="dpad">
-    <div class="dpad-empty"></div>
-    <button class="dpad-btn" data-dir="up">▲</button>
-    <div class="dpad-empty"></div>
-    <button class="dpad-btn" data-dir="left">◀</button>
-    <div class="dpad-empty"></div>
-    <button class="dpad-btn" data-dir="right">▶</button>
-    <div class="dpad-empty"></div>
-    <button class="dpad-btn" data-dir="down">▼</button>
-    <div class="dpad-empty"></div>
-  </div>
+  <canvas id="canvas"></canvas>
 </div>
 
 <div id="ui">
   <span id="player-count">👥 1 / 4</span>
   <input id="name-input" maxlength="8" placeholder="닉네임 입력후 Enter" />
-  <span class="hint">⬆⬇⬅➡ 이동</span>
-  <span class="hint">Space 이모티콘</span>
+  <span class="hint">⬆⬇⬅➡ 이동 | Space 이모티콘</span>
+</div>
+
+<!-- 조이스틱 -->
+<div id="joystick-zone">
+  <div id="joystick-base">
+    <div id="joystick-knob"></div>
+  </div>
+</div>
+
+<!-- 오른쪽 버튼 -->
+<div id="right-buttons">
+  <button class="action-btn" id="emote-btn">🎉</button>
+  <button class="action-btn" id="jump-btn">😊<span style="font-size:0.65rem">이모트</span></button>
 </div>
 
 <script>
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-const TILE = 32;
+const BASE_W = 640, BASE_H = 400;
 
+function resizeCanvas() {
+  const maxW = Math.min(window.innerWidth - 4, BASE_W);
+  const scale = maxW / BASE_W;
+  canvas.width = BASE_W;
+  canvas.height = BASE_H;
+  canvas.style.width = maxW + 'px';
+  canvas.style.height = (BASE_H * scale) + 'px';
+  const wrap = document.getElementById('game-wrap');
+  wrap.style.width = maxW + 'px';
+  wrap.style.height = (BASE_H * scale) + 'px';
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 200));
+
+const TILE = 32;
 const map = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -142,166 +233,164 @@ const map = [
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
 ];
 
-// ── Socket.io 연결 ──
+// ── Socket ──
 const socket = io();
 let myId = null;
 const players = {};
 
-socket.on('init', ({ id, players: all }) => {
-  myId = id;
-  Object.assign(players, all);
-  updateCount();
-});
-
-socket.on('playerJoined', (p) => {
-  players[p.id] = p;
-  updateCount();
-});
-
-socket.on('playerLeft', (id) => {
-  delete players[id];
-  updateCount();
-});
-
-socket.on('playerMoved', ({ id, x, y, facing }) => {
-  if (players[id]) { players[id].x = x; players[id].y = y; players[id].facing = facing; }
-});
-
-socket.on('playerEmote', ({ id, emote }) => {
-  if (players[id]) { players[id].emote = emote; players[id].emoteTimer = 1500; }
-});
-
-socket.on('playerName', ({ id, name }) => {
-  if (players[id]) players[id].name = name;
-});
-
-socket.on('full', () => {
-  alert('아지트가 꽉 찼어요! (최대 4명)');
-});
+socket.on('init', ({ id, players: all }) => { myId = id; Object.assign(players, all); updateCount(); });
+socket.on('playerJoined', p => { players[p.id] = p; updateCount(); });
+socket.on('playerLeft', id => { delete players[id]; updateCount(); });
+socket.on('playerMoved', ({ id, x, y, facing }) => { if (players[id]) { players[id].x=x; players[id].y=y; players[id].facing=facing; } });
+socket.on('playerEmote', ({ id, emote }) => { if (players[id]) { players[id].emote=emote; players[id].emoteTimer=1500; } });
+socket.on('playerName', ({ id, name }) => { if (players[id]) players[id].name=name; });
+socket.on('full', () => alert('아지트가 꽉 찼어요! (최대 4명)'));
 
 function updateCount() {
   document.getElementById('player-count').textContent = `👥 ${Object.keys(players).length} / 4`;
 }
 
-// ── 닉네임 ──
 document.getElementById('name-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    const name = e.target.value.trim();
-    if (name) socket.emit('setName', name);
-    e.target.blur();
+  if (e.key === 'Enter') { const n = e.target.value.trim(); if(n) socket.emit('setName', n); e.target.blur(); }
+});
+
+// ── 키보드 ──
+const keys = {};
+document.addEventListener('keydown', e => { keys[e.code]=true; });
+document.addEventListener('keyup',   e => { keys[e.code]=false; });
+
+// ── 조이스틱 ──
+const knob = document.getElementById('joystick-knob');
+const joystickZone = document.getElementById('joystick-zone');
+const KNOB_MAX = 36;
+let joy = { active:false, dx:0, dy:0, cx:0, cy:0, tid:null };
+
+joystickZone.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.changedTouches[0];
+  const rect = joystickZone.getBoundingClientRect();
+  joy.active = true;
+  joy.tid = t.identifier;
+  joy.cx = rect.left + rect.width/2;
+  joy.cy = rect.top + rect.height/2;
+  joy.dx = 0; joy.dy = 0;
+}, { passive: false });
+
+document.addEventListener('touchmove', e => {
+  if (!joy.active) return;
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    if (t.identifier !== joy.tid) continue;
+    let dx = t.clientX - joy.cx;
+    let dy = t.clientY - joy.cy;
+    const dist = Math.sqrt(dx*dx+dy*dy);
+    if (dist > KNOB_MAX) { dx=dx/dist*KNOB_MAX; dy=dy/dist*KNOB_MAX; }
+    joy.dx = dx/KNOB_MAX; joy.dy = dy/KNOB_MAX;
+    knob.style.transform = `translate(${dx}px,${dy}px)`;
+  }
+}, { passive: false });
+
+document.addEventListener('touchend', e => {
+  for (const t of e.changedTouches) {
+    if (t.identifier === joy.tid) {
+      joy.active=false; joy.dx=0; joy.dy=0;
+      knob.style.transform = 'translate(0,0)';
+    }
   }
 });
 
-// ── 입력 ──
-const keys = {};
-document.addEventListener('keydown', e => { keys[e.code] = true; });
-document.addEventListener('keyup',   e => { keys[e.code] = false; });
+// ── 이모트 버튼 ──
+const EMOTES = ['👋','😂','❤️','😮','🎉','👍','😴','🔥'];
 
-const dpad = { up:false, down:false, left:false, right:false };
-document.querySelectorAll('.dpad-btn').forEach(btn => {
-  const d = btn.dataset.dir;
-  btn.addEventListener('touchstart', e => { e.preventDefault(); dpad[d] = true; }, {passive:false});
-  btn.addEventListener('touchend',   e => { e.preventDefault(); dpad[d] = false; }, {passive:false});
-  btn.addEventListener('mousedown',  () => dpad[d] = true);
-  btn.addEventListener('mouseup',    () => dpad[d] = false);
-});
-
-function isWall(tx, ty) {
-  if (ty < 0 || ty >= map.length || tx < 0 || tx >= map[0].length) return true;
-  return map[ty][tx] === 1 || map[ty][tx] === 2 || map[ty][tx] === 3;
+function triggerEmote() {
+  const me = players[myId]; if (!me) return;
+  const emote = EMOTES[Math.floor(Math.random()*EMOTES.length)];
+  me.emote=emote; me.emoteTimer=1500;
+  socket.emit('emote', emote);
 }
-function tryMove(p, dx, dy) {
-  const r = 12, nx = p.x + dx, ny = p.y + dy;
+
+document.getElementById('jump-btn').addEventListener('touchstart', e => { e.preventDefault(); triggerEmote(); }, {passive:false});
+document.getElementById('emote-btn').addEventListener('touchstart', e => { e.preventDefault(); triggerEmote(); }, {passive:false});
+
+// ── 충돌 ──
+function isWall(tx,ty) {
+  if(ty<0||ty>=map.length||tx<0||tx>=map[0].length) return true;
+  return map[ty][tx]===1||map[ty][tx]===2||map[ty][tx]===3;
+}
+function tryMove(p,dx,dy) {
+  const r=12,nx=p.x+dx,ny=p.y+dy;
   return ![[nx-r,ny-r],[nx+r,ny-r],[nx-r,ny+r],[nx+r,ny+r]]
-    .some(([cx,cy]) => isWall(Math.floor(cx/TILE), Math.floor(cy/TILE)));
+    .some(([cx,cy])=>isWall(Math.floor(cx/TILE),Math.floor(cy/TILE)));
 }
 
-// ── 맵 그리기 ──
-const tileColors = { 0:'#1e2a45', 1:'#0f172a' };
+// ── 맵 ──
 function drawMap() {
-  for (let r = 0; r < map.length; r++) {
-    for (let c = 0; c < map[0].length; c++) {
-      const t = map[r][c], x = c*TILE, y = r*TILE;
-      if (t === 2) {
-        ctx.fillStyle = '#6d28d9'; ctx.fillRect(x,y,TILE,TILE);
-        ctx.fillStyle = '#8b5cf6'; ctx.fillRect(x+2,y+2,TILE-4,10);
-        ctx.fillRect(x+2,y+2,8,TILE-4); ctx.fillRect(x+TILE-10,y+2,8,TILE-4);
-      } else if (t === 3) {
-        ctx.fillStyle = '#92400e'; ctx.fillRect(x,y,TILE,TILE);
-        ctx.fillStyle = '#b45309'; ctx.fillRect(x+6,y+6,TILE-12,TILE-12);
-      } else if (t === 4) {
-        ctx.fillStyle = '#1e3a5f'; ctx.fillRect(x,y,TILE,TILE);
-        ctx.strokeStyle = '#3b82f644'; ctx.strokeRect(x+3,y+3,TILE-6,TILE-6);
-      } else {
-        ctx.fillStyle = tileColors[t] || '#1e2a45'; ctx.fillRect(x,y,TILE,TILE);
-      }
-      if (t === 0 || t === 4) { ctx.strokeStyle = '#ffffff08'; ctx.strokeRect(x,y,TILE,TILE); }
+  for(let r=0;r<map.length;r++) {
+    for(let c=0;c<map[0].length;c++) {
+      const t=map[r][c],x=c*TILE,y=r*TILE;
+      if(t===2){ctx.fillStyle='#6d28d9';ctx.fillRect(x,y,TILE,TILE);ctx.fillStyle='#8b5cf6';ctx.fillRect(x+2,y+2,TILE-4,10);ctx.fillRect(x+2,y+2,8,TILE-4);ctx.fillRect(x+TILE-10,y+2,8,TILE-4);}
+      else if(t===3){ctx.fillStyle='#92400e';ctx.fillRect(x,y,TILE,TILE);ctx.fillStyle='#b45309';ctx.fillRect(x+6,y+6,TILE-12,TILE-12);}
+      else if(t===4){ctx.fillStyle='#1e3a5f';ctx.fillRect(x,y,TILE,TILE);ctx.strokeStyle='#3b82f644';ctx.strokeRect(x+3,y+3,TILE-6,TILE-6);}
+      else{ctx.fillStyle=t===1?'#0f172a':'#1e2a45';ctx.fillRect(x,y,TILE,TILE);}
+      if(t===0||t===4){ctx.strokeStyle='#ffffff08';ctx.strokeRect(x,y,TILE,TILE);}
     }
   }
 }
 
-function drawPlayer(p, isMe) {
-  const x = Math.round(p.x), y = Math.round(p.y), r = 12;
-  ctx.beginPath(); ctx.ellipse(x, y+r+2, r*0.8, 4, 0, 0, Math.PI*2);
-  ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fill();
-  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
-  ctx.fillStyle = p.color; ctx.fill();
-  ctx.strokeStyle = isMe ? '#ffffff' : '#ffffffaa';
-  ctx.lineWidth = isMe ? 2.5 : 1.5; ctx.stroke();
-  const eo = 4 * p.facing;
-  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x+eo, y-2, 3.5, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#1a1a2e'; ctx.beginPath(); ctx.arc(x+eo+p.facing, y-2, 1.8, 0, Math.PI*2); ctx.fill();
-  ctx.font = `bold 11px "Nanum Gothic"`;
-  ctx.textAlign = 'center';
-  ctx.fillStyle = isMe ? '#fff' : '#ffffffcc';
-  ctx.fillText((p.name || '?') + (isMe ? ' ★' : ''), x, y-r-6);
-  if (p.emote) { ctx.font = '18px serif'; ctx.fillText(p.emote, x+14, y-r-4); }
+function drawPlayer(p,isMe) {
+  const x=Math.round(p.x),y=Math.round(p.y),r=12;
+  ctx.beginPath();ctx.ellipse(x,y+r+2,r*0.8,4,0,0,Math.PI*2);ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fill();
+  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=p.color;ctx.fill();
+  ctx.strokeStyle=isMe?'#ffffff':'#ffffffaa';ctx.lineWidth=isMe?2.5:1.5;ctx.stroke();
+  const eo=4*p.facing;
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x+eo,y-2,3.5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#1a1a2e';ctx.beginPath();ctx.arc(x+eo+p.facing,y-2,1.8,0,Math.PI*2);ctx.fill();
+  ctx.font='bold 11px "Nanum Gothic"';ctx.textAlign='center';
+  ctx.fillStyle=isMe?'#fff':'#ffffffcc';
+  ctx.fillText((p.name||'?')+(isMe?' ★':''),x,y-r-6);
+  if(p.emote){ctx.font='18px serif';ctx.fillText(p.emote,x+14,y-r-4);}
 }
 
-// ── 게임 루프 ──
-const SPEED = 2.2;
-const EMOTES = ['👋','😂','❤️','😮','🎉','👍','😴'];
-let lastTime = 0;
-let lastSent = { x:0, y:0, facing:1 };
+// ── 루프 ──
+const SPEED=2.2;
+let lastTime=0,lastSent={x:0,y:0,facing:1},spacePrev=false;
 
 function loop(ts) {
-  const dt = ts - lastTime; lastTime = ts;
-  const me = players[myId];
+  const dt=ts-lastTime; lastTime=ts;
+  const me=players[myId];
 
-  if (me) {
-    const up    = keys['ArrowUp']   || keys['KeyW'] || dpad.up;
-    const down  = keys['ArrowDown'] || keys['KeyS'] || dpad.down;
-    const left  = keys['ArrowLeft'] || keys['KeyA'] || dpad.left;
-    const right = keys['ArrowRight']|| keys['KeyD'] || dpad.right;
+  if(me) {
+    const T=0.2;
+    const goLeft  = keys['ArrowLeft'] ||keys['KeyA']||joy.dx<-T;
+    const goRight = keys['ArrowRight']||keys['KeyD']||joy.dx> T;
+    const goUp    = keys['ArrowUp']   ||keys['KeyW']||joy.dy<-T;
+    const goDown  = keys['ArrowDown'] ||keys['KeyS']||joy.dy> T;
 
-    if (left)  { if (tryMove(me,-SPEED,0)) { me.x-=SPEED; me.facing=-1; } }
-    if (right) { if (tryMove(me, SPEED,0)) { me.x+=SPEED; me.facing= 1; } }
-    if (up)    { if (tryMove(me,0,-SPEED)) me.y-=SPEED; }
-    if (down)  { if (tryMove(me,0, SPEED)) me.y+=SPEED; }
+    const sx = Math.abs(joy.dx)>T ? SPEED*Math.min(Math.abs(joy.dx)*1.5,1) : SPEED;
+    const sy = Math.abs(joy.dy)>T ? SPEED*Math.min(Math.abs(joy.dy)*1.5,1) : SPEED;
 
-    if (keys['Space'] && !me._spacePrev) {
-      const emote = EMOTES[Math.floor(Math.random()*EMOTES.length)];
-      me.emote = emote; me.emoteTimer = 1500;
-      socket.emit('emote', emote);
-    }
-    me._spacePrev = keys['Space'];
+    if(goLeft) {if(tryMove(me,-sx,0)){me.x-=sx;me.facing=-1;}}
+    if(goRight){if(tryMove(me, sx,0)){me.x+=sx;me.facing= 1;}}
+    if(goUp)   {if(tryMove(me,0,-sy))me.y-=sy;}
+    if(goDown) {if(tryMove(me,0, sy))me.y+=sy;}
 
-    if (me.emoteTimer > 0) { me.emoteTimer -= dt; if (me.emoteTimer <= 0) me.emote = ''; }
+    if(keys['Space']&&!spacePrev) triggerEmote();
+    spacePrev=keys['Space'];
 
-    // 위치 변경시만 전송
-    if (me.x !== lastSent.x || me.y !== lastSent.y || me.facing !== lastSent.facing) {
-      socket.emit('move', { x: me.x, y: me.y, facing: me.facing });
-      lastSent = { x: me.x, y: me.y, facing: me.facing };
+    if(me.emoteTimer>0){me.emoteTimer-=dt;if(me.emoteTimer<=0)me.emote='';}
+
+    if(me.x!==lastSent.x||me.y!==lastSent.y||me.facing!==lastSent.facing){
+      socket.emit('move',{x:me.x,y:me.y,facing:me.facing});
+      lastSent={x:me.x,y:me.y,facing:me.facing};
     }
   }
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
   drawMap();
-  Object.values(players).sort((a,b) => a.y - b.y).forEach(p => drawPlayer(p, p.id === myId));
-
+  Object.values(players).sort((a,b)=>a.y-b.y).forEach(p=>drawPlayer(p,p.id===myId));
   requestAnimationFrame(loop);
 }
-requestAnimationFrame(ts => { lastTime = ts; requestAnimationFrame(loop); });
+requestAnimationFrame(ts=>{lastTime=ts;requestAnimationFrame(loop);});
 </script>
 </body>
 </html>
