@@ -8,154 +8,128 @@
 <script src="/socket.io/socket.io.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Gothic:wght@400;700&display=swap');
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  body {
-    background:#1a1a2e; font-family:'Nanum Gothic',sans-serif;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    width:100vw; height:100vh; overflow:hidden; user-select:none; touch-action:none;
-  }
-  #game-wrap { position:relative; border-radius:16px; overflow:hidden; box-shadow:0 0 40px #6d28d966,0 0 0 2px #7c3aed44; }
-  canvas { display:block; }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{background:#1a1a2e;font-family:'Nanum Gothic',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100vw;height:100vh;overflow:hidden;user-select:none;touch-action:none;}
+  #game-wrap{position:relative;border-radius:16px;overflow:hidden;box-shadow:0 0 40px #6d28d966,0 0 0 2px #7c3aed44;}
+  canvas{display:block;}
 
-  /* 닉네임 - 맵 좌측 상단 */
-  #nickname-box {
-    position:absolute; top:10px; left:10px; z-index:50;
-    display:flex; align-items:center; gap:5px;
-    background:#0f172acc; border-radius:8px; padding:5px 10px;
-    border:1px solid #7c3aed44;
-  }
-  #nick-label { font-family:'Jua',sans-serif; font-size:0.7rem; color:#c4b5fd; }
-  #name-input {
-    background:transparent; color:#e0d7ff; border:none; border-bottom:1px solid #7c3aed88;
-    padding:2px 4px; font-size:0.78rem; font-family:'Jua',sans-serif;
-    outline:none; width:80px;
-  }
-  #name-input:focus { border-bottom-color:#a78bfa; }
+  /* 닉네임 */
+  #nickname-box{position:absolute;top:10px;left:10px;z-index:50;display:flex;align-items:center;gap:5px;background:#0f172acc;border-radius:8px;padding:5px 10px;border:1px solid #7c3aed44;}
+  #nick-label{font-family:'Jua',sans-serif;font-size:0.7rem;color:#c4b5fd;}
+  #name-input{background:transparent;color:#e0d7ff;border:none;border-bottom:1px solid #7c3aed88;padding:2px 4px;font-size:0.78rem;font-family:'Jua',sans-serif;outline:none;width:80px;}
+  #name-input:focus{border-bottom-color:#a78bfa;}
 
-  /* 인원수 - 맵 우측 상단 */
-  #player-count {
-    position:absolute; top:10px; right:10px; z-index:50;
-    background:#1e3a5fcc; color:#93c5fd; border-radius:6px;
-    padding:4px 10px; font-size:0.7rem; font-family:'Jua',sans-serif;
-  }
+  /* 인원수 */
+  #player-count{position:absolute;top:10px;right:10px;z-index:50;background:#1e3a5fcc;color:#93c5fd;border-radius:6px;padding:4px 10px;font-size:0.7rem;font-family:'Jua',sans-serif;}
 
-  /* 채팅 - 맵 중앙 하단 */
-  #chat-wrap {
-    position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
-    width:300px; z-index:50;
-  }
-  #chat-log { max-height:70px; overflow-y:auto; margin-bottom:4px; display:flex; flex-direction:column; gap:2px; }
-  .chat-msg {
-    background:#0f172acc; color:#e0d7ff; border-radius:5px;
-    padding:3px 8px; font-size:0.72rem; width:fit-content; max-width:100%; word-break:break-all;
-  }
-  #chat-input-row { display:flex; gap:4px; opacity:0.3; transition:opacity 0.2s; pointer-events:none; }
-  #chat-input-row.active { opacity:1; pointer-events:all; }
-  #chat-input {
-    flex:1; background:#1a1a2ecc; color:#e0d7ff;
-    border:1px solid #7c3aed55; border-radius:6px;
-    padding:4px 8px; font-size:0.78rem; font-family:'Nanum Gothic',sans-serif; outline:none;
-  }
-  #chat-input.active { border-color:#a78bfa; background:#2d1b69cc; }
-  #chat-send {
-    background:#6d28d9; color:#fff; border:none; border-radius:6px;
-    padding:4px 10px; font-family:'Jua',sans-serif; font-size:0.72rem; cursor:pointer;
-  }
+  /* 이모트 바 (PC: 맵 위) */
+  #emote-bar{position:absolute;top:-44px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:50;}
+  .emote-slot{background:#2d1b69cc;border:1px solid #7c3aed55;border-radius:8px;padding:4px 10px;font-size:1.1rem;cursor:pointer;font-family:'Jua',sans-serif;color:#c4b5fd;font-size:0.75rem;display:flex;flex-direction:column;align-items:center;gap:1px;transition:background 0.1s;}
+  .emote-slot:hover{background:#6d28d9aa;}
+  .emote-slot .ekey{font-size:0.6rem;color:#a78bfa;}
+
+  /* 채팅 */
+  #chat-wrap{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:300px;z-index:50;}
+  #chat-log{max-height:70px;overflow-y:auto;margin-bottom:4px;display:flex;flex-direction:column;gap:2px;}
+  .chat-msg{background:#0f172acc;color:#e0d7ff;border-radius:5px;padding:3px 8px;font-size:0.72rem;width:fit-content;max-width:100%;word-break:break-all;}
+  #chat-input-row{display:flex;gap:4px;opacity:0.3;transition:opacity 0.2s;pointer-events:none;}
+  #chat-input-row.active{opacity:1;pointer-events:all;}
+  #chat-input{flex:1;background:#1a1a2ecc;color:#e0d7ff;border:1px solid #7c3aed55;border-radius:6px;padding:4px 8px;font-size:0.78rem;font-family:'Nanum Gothic',sans-serif;outline:none;}
+  #chat-input.active{border-color:#a78bfa;background:#2d1b69cc;}
+  #chat-send{background:#6d28d9;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-family:'Jua',sans-serif;font-size:0.72rem;cursor:pointer;}
 
   /* 키 힌트 */
-  #key-hints {
-    position:absolute; bottom:10px; right:10px; z-index:50;
-    display:flex; flex-direction:column; gap:2px; align-items:flex-end;
-  }
-  .k { font-family:'Jua',sans-serif; font-size:0.62rem; color:#ffffff44; }
+  #key-hints{position:absolute;bottom:10px;right:10px;z-index:50;display:flex;flex-direction:column;gap:2px;align-items:flex-end;}
+  .k{font-family:'Jua',sans-serif;font-size:0.6rem;color:#ffffff33;}
 
   /* 조이스틱 */
-  #joystick-zone {
-    position:fixed; bottom:28px; left:28px; width:120px; height:120px;
-    display:none; align-items:center; justify-content:center; z-index:100;
-  }
-  #joystick-base {
-    width:110px; height:110px; border-radius:50%;
-    background:rgba(124,58,237,0.18); border:2px solid rgba(167,139,250,0.4);
-    position:absolute; display:flex; align-items:center; justify-content:center;
-  }
-  #joystick-knob {
-    width:48px; height:48px; border-radius:50%;
-    background:radial-gradient(circle at 35% 35%,#a78bfa,#6d28d9);
-    box-shadow:0 4px 16px rgba(109,40,217,0.6); position:absolute; pointer-events:none;
-  }
+  #joystick-zone{position:fixed;bottom:28px;left:28px;width:120px;height:120px;display:none;align-items:center;justify-content:center;z-index:100;}
+  #joystick-base{width:110px;height:110px;border-radius:50%;background:rgba(124,58,237,0.18);border:2px solid rgba(167,139,250,0.4);position:absolute;display:flex;align-items:center;justify-content:center;}
+  #joystick-knob{width:48px;height:48px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#a78bfa,#6d28d9);box-shadow:0 4px 16px rgba(109,40,217,0.6);position:absolute;pointer-events:none;}
 
   /* 오른쪽 버튼 */
-  #right-buttons {
-    position:fixed; bottom:28px; right:28px;
-    display:none; flex-direction:column; align-items:flex-end; gap:10px; z-index:100;
-  }
-  .action-btn {
-    border-radius:50%; border:2px solid rgba(255,255,255,0.2);
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer; transition:transform 0.1s; flex-direction:column; gap:1px;
-  }
-  .action-btn:active { transform:scale(0.88); }
-  #jump-btn { width:72px; height:72px; background:radial-gradient(circle at 35% 35%,#60a5fa,#2563eb); box-shadow:0 4px 20px rgba(37,99,235,0.5); font-size:1.5rem; }
-  #push-btn { width:62px; height:62px; background:radial-gradient(circle at 35% 35%,#f87171,#dc2626); box-shadow:0 4px 16px rgba(220,38,38,0.5); font-size:1.3rem; }
-  #emote-btn { width:52px; height:52px; background:rgba(30,58,95,0.85); box-shadow:0 4px 16px rgba(30,58,95,0.5); font-size:1.2rem; }
+  #right-buttons{position:fixed;bottom:20px;right:20px;display:none;flex-direction:column;align-items:flex-end;gap:8px;z-index:100;}
+  .action-btn{border-radius:50%;border:2px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform 0.1s;}
+  .action-btn:active{transform:scale(0.88);}
+  #jump-btn{width:68px;height:68px;background:radial-gradient(circle at 35% 35%,#60a5fa,#2563eb);box-shadow:0 4px 20px rgba(37,99,235,0.5);font-size:1.4rem;}
+  #push-btn{width:58px;height:58px;background:radial-gradient(circle at 35% 35%,#f87171,#dc2626);box-shadow:0 4px 16px rgba(220,38,38,0.5);font-size:1.2rem;}
+  #gun-btn{width:52px;height:52px;background:radial-gradient(circle at 35% 35%,#a3a3a3,#404040);box-shadow:0 4px 16px rgba(0,0,0,0.5);font-size:1.1rem;}
 
-  @media (max-width:900px) {
-    #joystick-zone { display:flex; }
-    #right-buttons { display:flex; }
-    #key-hints { display:none; }
-    #chat-wrap { width:200px; }
+  /* 모바일 이모트 바 */
+  #mo-emote-bar{position:fixed;bottom:170px;right:20px;display:none;flex-direction:column;gap:6px;z-index:100;}
+  .mo-emote-btn{width:42px;height:42px;border-radius:50%;background:#2d1b69cc;border:1px solid #7c3aed55;display:flex;align-items:center;justify-content:center;font-size:1.2rem;cursor:pointer;}
+  .mo-emote-btn:active{background:#6d28d9aa;}
+
+  @media(max-width:900px){
+    #joystick-zone{display:flex;}
+    #right-buttons{display:flex;}
+    #mo-emote-bar{display:flex;}
+    #key-hints{display:none;}
+    #emote-bar{display:none;}
+    #chat-wrap{width:200px;}
   }
 </style>
 </head>
 <body>
-<div id="game-wrap">
-  <canvas id="canvas"></canvas>
-  <div id="nickname-box">
-    <span id="nick-label">닉네임</span>
-    <input id="name-input" maxlength="8" placeholder="입력후 Enter" />
+<div style="position:relative;">
+  <!-- 이모트 바 PC -->
+  <div id="emote-bar">
+    <div class="emote-slot" data-emote="0"><span>😊</span><span class="ekey">1</span></div>
+    <div class="emote-slot" data-emote="1"><span>😒</span><span class="ekey">2</span></div>
+    <div class="emote-slot" data-emote="2"><span>😍</span><span class="ekey">3</span></div>
+    <div class="emote-slot" data-emote="3"><span>😐</span><span class="ekey">4</span></div>
+    <div class="emote-slot" data-emote="4"><span>😭</span><span class="ekey">5</span></div>
   </div>
-  <div id="player-count">👥 0 / 4</div>
-  <div id="chat-wrap">
-    <div id="chat-log"></div>
-    <div id="chat-input-row">
-      <input id="chat-input" maxlength="40" placeholder="Enter 눌러서 채팅 활성화" readonly />
-      <button id="chat-send">전송</button>
+  <div id="game-wrap">
+    <canvas id="canvas"></canvas>
+    <div id="nickname-box"><span id="nick-label">닉네임</span><input id="name-input" maxlength="8" placeholder="입력후 Enter"/></div>
+    <div id="player-count">👥 0 / 4</div>
+    <div id="chat-wrap">
+      <div id="chat-log"></div>
+      <div id="chat-input-row">
+        <input id="chat-input" maxlength="40" placeholder="Enter 눌러서 채팅" readonly/>
+        <button id="chat-send">전송</button>
+      </div>
     </div>
-  </div>
-  <div id="key-hints">
-    <span class="k">← → ↑ ↓ 이동</span>
-    <span class="k">Space 점프</span>
-    <span class="k">Z 밀치기</span>
-    <span class="k">X 이모트</span>
-    <span class="k">Enter 채팅</span>
+    <div id="key-hints">
+      <span class="k">방향키 이동 / 방향키×2 대시</span>
+      <span class="k">Space 점프 | Z 밀치기 | C 총</span>
+      <span class="k">1~5 이모트 | Enter 채팅</span>
+    </div>
   </div>
 </div>
 
-<div id="joystick-zone">
-  <div id="joystick-base"><div id="joystick-knob"></div></div>
-</div>
+<div id="joystick-zone"><div id="joystick-base"><div id="joystick-knob"></div></div></div>
+
 <div id="right-buttons">
-  <button class="action-btn" id="emote-btn">🎉</button>
-  <button class="action-btn" id="push-btn">👊</button>
   <button class="action-btn" id="jump-btn">⬆️</button>
+  <button class="action-btn" id="push-btn">👊</button>
+  <button class="action-btn" id="gun-btn">🔫</button>
+</div>
+
+<div id="mo-emote-bar">
+  <div class="mo-emote-btn" data-emote="0">😊</div>
+  <div class="mo-emote-btn" data-emote="1">😒</div>
+  <div class="mo-emote-btn" data-emote="2">😍</div>
+  <div class="mo-emote-btn" data-emote="3">😐</div>
+  <div class="mo-emote-btn" data-emote="4">😭</div>
 </div>
 
 <script>
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-const BASE_W = 640, BASE_H = 400;
+const canvas=document.getElementById('canvas');
+const ctx=canvas.getContext('2d');
+const BASE_W=640,BASE_H=400;
 
-function resizeCanvas() {
-  const maxW = Math.min(window.innerWidth-4, BASE_W);
-  const scale = maxW/BASE_W;
-  canvas.width=BASE_W; canvas.height=BASE_H;
-  canvas.style.width=maxW+'px'; canvas.style.height=(BASE_H*scale)+'px';
+function resizeCanvas(){
+  const maxW=Math.min(window.innerWidth-4,BASE_W);
+  const scale=maxW/BASE_W;
+  canvas.width=BASE_W;canvas.height=BASE_H;
+  canvas.style.width=maxW+'px';canvas.style.height=(BASE_H*scale)+'px';
   const w=document.getElementById('game-wrap');
-  w.style.width=maxW+'px'; w.style.height=(BASE_H*scale)+'px';
+  w.style.width=maxW+'px';w.style.height=(BASE_H*scale)+'px';
 }
 resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
+window.addEventListener('resize',resizeCanvas);
 window.addEventListener('orientationchange',()=>setTimeout(resizeCanvas,200));
 
 const TILE=32;
@@ -175,32 +149,47 @@ const map=[
 ];
 
 // ── Socket ──
-const socket = io();
+const socket=io();
 let myId=null;
 const players={};
+const bullets=[];
 
 socket.on('init',({id,players:all})=>{ myId=id; Object.assign(players,all); updateCount(); });
-socket.on('playerJoined',p=>{ players[p.id]=p; updateCount(); });
+socket.on('playerJoined',p=>{ players[p.id]={...p,hitCount:0}; updateCount(); });
 socket.on('playerLeft',id=>{ delete players[id]; updateCount(); });
 socket.on('playerMoved',({id,x,y,facing,jumpOffset})=>{
   if(!players[id])return;
-  players[id].x=x; players[id].y=y; players[id].facing=facing;
-  players[id].jumpOffset=jumpOffset||0;
+  players[id].x=x;players[id].y=y;players[id].facing=facing;players[id].jumpOffset=jumpOffset||0;
 });
-socket.on('playerEmote',({id,emote})=>{ if(players[id]){players[id].emote=emote;players[id].emoteTimer=1500;} });
+socket.on('playerEmote',({id,emote})=>{ if(players[id]){players[id].emote=emote;players[id].emoteTimer=1000;players[id].emoteY=0;players[id].emoteAlpha=1;} });
 socket.on('playerName',({id,name})=>{ if(players[id])players[id].name=name; });
-socket.on('playerPushed',({id,vx,vy})=>{
+socket.on('playerPushed',({id,vx,vy,isHit})=>{
   if(!players[id])return;
-  players[id].pushVx=vx; players[id].pushVy=vy;
-  players[id].knockback=true; players[id].knockTimer=700;
+  players[id].pushVx=vx*1.5;players[id].pushVy=(vy||0)*1.5;
+  players[id].knockback=true;players[id].knockTimer=800;
+  if(isHit){players[id].hitCount=(players[id].hitCount||0)+1;players[id].eyeHurt=true;}
 });
+socket.on('respawn',({id})=>{ if(players[id])startRespawn(id); });
 socket.on('chat',({id,name,msg,color})=>{
   addChat(name,msg,color);
   if(players[id]){players[id].chatMsg=msg;players[id].chatTimer=4000;}
 });
 socket.on('full',()=>alert('아지트가 꽉 찼어요!'));
 
+// 총알 (클라이언트에서 직접 브로드캐스트)
+socket.on('bullet_spawn',({id,x,y,vx,vy,color})=>{
+  if(id===myId)return; // 내 것은 이미 로컬에
+  bullets.push({x,y,vx,vy,color,ownerId:id,alpha:1});
+});
+
 function updateCount(){ document.getElementById('player-count').textContent=`👥 ${Object.keys(players).length} / 4`; }
+
+// ── 리스폰 ──
+function startRespawn(id){
+  if(!players[id])return;
+  players[id].dying=true;players[id].dyingTimer=2000;
+  players[id].blinkTimer=0;players[id].hitCount=0;
+}
 
 // ── 채팅 ──
 let chatActive=false;
@@ -209,32 +198,16 @@ const chatInputRow=document.getElementById('chat-input-row');
 const chatLog=document.getElementById('chat-log');
 
 function addChat(name,msg,color){
-  const el=document.createElement('div'); el.className='chat-msg';
+  const el=document.createElement('div');el.className='chat-msg';
   el.innerHTML=`<span style="color:${color};font-weight:bold">${name}</span> ${msg}`;
-  chatLog.appendChild(el); chatLog.scrollTop=chatLog.scrollHeight;
+  chatLog.appendChild(el);chatLog.scrollTop=chatLog.scrollHeight;
   while(chatLog.children.length>20)chatLog.removeChild(chatLog.firstChild);
 }
+function activateChat(){ if(chatActive)return;chatActive=true;chatInput.removeAttribute('readonly');chatInput.classList.add('active');chatInputRow.classList.add('active');chatInput.focus(); }
+function deactivateChat(){ chatActive=false;chatInput.setAttribute('readonly',true);chatInput.classList.remove('active');chatInputRow.classList.remove('active');chatInput.blur(); }
+function sendChat(){ const msg=chatInput.value.trim();if(msg&&myId&&players[myId])socket.emit('chat',msg);chatInput.value='';deactivateChat(); }
 
-function activateChat(){
-  if(chatActive)return; chatActive=true;
-  chatInput.removeAttribute('readonly'); chatInput.classList.add('active');
-  chatInputRow.classList.add('active'); chatInput.focus();
-}
-function deactivateChat(){
-  chatActive=false; chatInput.setAttribute('readonly',true);
-  chatInput.classList.remove('active'); chatInputRow.classList.remove('active'); chatInput.blur();
-}
-function sendChat(){
-  const msg=chatInput.value.trim();
-  if(msg&&myId&&players[myId]) socket.emit('chat',msg);
-  chatInput.value=''; deactivateChat();
-}
-
-chatInput.addEventListener('keydown',e=>{
-  if(e.key==='Enter'){e.preventDefault();sendChat();}
-  if(e.key==='Escape')deactivateChat();
-  e.stopPropagation();
-});
+chatInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();sendChat();}if(e.key==='Escape')deactivateChat();e.stopPropagation(); });
 document.getElementById('chat-send').addEventListener('click',sendChat);
 document.getElementById('chat-send').addEventListener('touchstart',e=>{e.preventDefault();sendChat();},{passive:false});
 
@@ -243,17 +216,50 @@ const nameInput=document.getElementById('name-input');
 let nickFocused=false;
 nameInput.addEventListener('focus',()=>nickFocused=true);
 nameInput.addEventListener('blur',()=>nickFocused=false);
-nameInput.addEventListener('keydown',e=>{
-  if(e.key==='Enter'){const n=e.target.value.trim();if(n)socket.emit('setName',n);nameInput.blur();}
-  e.stopPropagation();
+nameInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){const n=e.target.value.trim();if(n)socket.emit('setName',n);nameInput.blur();}e.stopPropagation(); });
+
+// ── 이모트 ──
+const EMOTES=['😊','😒','😍','😐','😭'];
+function triggerEmote(idx){
+  const me=players[myId];if(!me)return;
+  const e=EMOTES[idx];
+  me.emote=e;me.emoteTimer=1000;me.emoteY=0;me.emoteAlpha=1;
+  socket.emit('emote',e);
+}
+
+// PC 이모트 바 클릭
+document.querySelectorAll('.emote-slot').forEach(el=>{
+  el.addEventListener('click',()=>triggerEmote(+el.dataset.emote));
+});
+// 모바일 이모트 버튼
+document.querySelectorAll('.mo-emote-btn').forEach(el=>{
+  el.addEventListener('touchstart',e=>{e.preventDefault();triggerEmote(+el.dataset.emote);},{passive:false});
+  el.addEventListener('click',()=>triggerEmote(+el.dataset.emote));
 });
 
 // ── 키보드 ──
 const keys={};
+const keyTimestamps={};
+let dashCooldown=0;
+
 document.addEventListener('keydown',e=>{
   if(nickFocused)return;
   if(e.key==='Enter'&&!chatActive){activateChat();return;}
   if(chatActive)return;
+  // 이모트 1~5
+  if(['Digit1','Digit2','Digit3','Digit4','Digit5'].includes(e.code)){
+    triggerEmote(+e.code.replace('Digit','')-1);return;
+  }
+  if(!keys[e.code]){
+    // 대시: 같은 방향키 두번
+    if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){
+      const now=performance.now();
+      if(keyTimestamps[e.code]&&now-keyTimestamps[e.code]<300){
+        if(dashCooldown<=0)keys['_dashTrigger']=e.code;
+      }
+      keyTimestamps[e.code]=now;
+    }
+  }
   keys[e.code]=true;
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
 });
@@ -266,19 +272,19 @@ const KNOB_MAX=36;
 let joy={active:false,dx:0,dy:0,cx:0,cy:0,tid:null};
 
 joystickZone.addEventListener('touchstart',e=>{
-  e.preventDefault(); const t=e.changedTouches[0];
+  e.preventDefault();const t=e.changedTouches[0];
   const rect=joystickZone.getBoundingClientRect();
-  joy.active=true; joy.tid=t.identifier;
-  joy.cx=rect.left+rect.width/2; joy.cy=rect.top+rect.height/2; joy.dx=0; joy.dy=0;
+  joy.active=true;joy.tid=t.identifier;
+  joy.cx=rect.left+rect.width/2;joy.cy=rect.top+rect.height/2;joy.dx=0;joy.dy=0;
 },{passive:false});
 document.addEventListener('touchmove',e=>{
-  if(!joy.active)return; e.preventDefault();
+  if(!joy.active)return;e.preventDefault();
   for(const t of e.changedTouches){
     if(t.identifier!==joy.tid)continue;
     let dx=t.clientX-joy.cx,dy=t.clientY-joy.cy;
     const dist=Math.sqrt(dx*dx+dy*dy);
     if(dist>KNOB_MAX){dx=dx/dist*KNOB_MAX;dy=dy/dist*KNOB_MAX;}
-    joy.dx=dx/KNOB_MAX; joy.dy=dy/KNOB_MAX;
+    joy.dx=dx/KNOB_MAX;joy.dy=dy/KNOB_MAX;
     knob.style.transform=`translate(${dx}px,${dy}px)`;
   }
 },{passive:false});
@@ -287,42 +293,6 @@ document.addEventListener('touchend',e=>{
     if(t.identifier===joy.tid){joy.active=false;joy.dx=0;joy.dy=0;knob.style.transform='translate(0,0)';}
   }
 });
-
-// ── 액션 ──
-const EMOTES=['👋','😂','❤️','😮','🎉','👍','😴','🔥'];
-
-function triggerEmote(){
-  const me=players[myId];if(!me)return;
-  const e=EMOTES[Math.floor(Math.random()*EMOTES.length)];
-  me.emote=e;me.emoteTimer=1500;socket.emit('emote',e);
-}
-
-function doJump(){
-  const me=players[myId];if(!me||me.jumping)return;
-  me.jumping=true;me.jumpTime=0;
-}
-
-function doPush(){
-  const me=players[myId];if(!me)return;
-  const RANGE=38;
-  for(const[id,p] of Object.entries(players)){
-    if(id===myId)continue;
-    const dx=p.x-me.x,dy=p.y-me.y;
-    const dist=Math.sqrt(dx*dx+dy*dy);
-    if(dist<RANGE&&dx*me.facing>=0){
-      const vx=me.facing*6,vy=-2;
-      socket.emit('push',{targetId:id,vx,vy});
-      p.pushVx=vx;p.pushVy=vy;p.knockback=true;p.knockTimer=700;
-    }
-  }
-}
-
-document.getElementById('emote-btn').addEventListener('touchstart',e=>{e.preventDefault();triggerEmote();},{passive:false});
-document.getElementById('emote-btn').addEventListener('click',triggerEmote);
-document.getElementById('jump-btn').addEventListener('touchstart',e=>{e.preventDefault();doJump();},{passive:false});
-document.getElementById('jump-btn').addEventListener('click',doJump);
-document.getElementById('push-btn').addEventListener('touchstart',e=>{e.preventDefault();doPush();},{passive:false});
-document.getElementById('push-btn').addEventListener('click',doPush);
 
 // ── 충돌 ──
 function isWall(tx,ty){
@@ -339,9 +309,8 @@ function resolvePlayerCollisions(){
   for(let i=0;i<ids.length;i++){
     for(let j=i+1;j<ids.length;j++){
       const a=players[ids[i]],b=players[ids[j]];
-      const dx=b.x-a.x,dy=b.y-a.y;
-      const dist=Math.sqrt(dx*dx+dy*dy);
-      const minDist=26;
+      if(a.dying||b.dying)continue;
+      const dx=b.x-a.x,dy=b.y-a.y,dist=Math.sqrt(dx*dx+dy*dy),minDist=26;
       if(dist<minDist&&dist>0){
         const push=(minDist-dist)/2,nx=dx/dist,ny=dy/dist;
         if(ids[i]===myId&&tryMove(a,-nx*push,-ny*push)){a.x-=nx*push;a.y-=ny*push;}
@@ -351,7 +320,54 @@ function resolvePlayerCollisions(){
   }
 }
 
-// ── 그리기 ──
+// ── 액션 ──
+const SPEED=1.54; // 기존 2.2 * 0.7
+const JUMP_HEIGHT=40,JUMP_DUR=800;
+let gunCooldown=0;
+
+function doJump(){
+  const me=players[myId];if(!me||me.jumping||me.dying)return;
+  me.jumping=true;me.jumpTime=0;
+}
+function doPush(){
+  const me=players[myId];if(!me||me.dying)return;
+  const RANGE=38;let hit=false;
+  for(const[id,p] of Object.entries(players)){
+    if(id===myId||p.dying)continue;
+    const dx=p.x-me.x,dy=p.y-me.y,dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<RANGE&&dx*me.facing>=0){
+      const vx=me.facing*9,vy=-2;
+      socket.emit('push_hit',{targetId:id,vx,vy});
+      p.pushVx=vx*1.5;p.pushVy=vy*1.5;p.knockback=true;p.knockTimer=800;
+      p.hitCount=(p.hitCount||0)+1;p.eyeHurt=true;
+      if(p.hitCount>=5)startRespawn(id);
+      hit=true;
+    }
+  }
+  // 밀치기 실패 시 본인 앞으로 넘어짐
+  if(!hit){
+    me.pushVx=me.facing*3;me.pushVy=0;
+    me.knockback=true;me.knockTimer=500;
+  }
+}
+function doShoot(){
+  const me=players[myId];if(!me||me.dying||gunCooldown>0)return;
+  gunCooldown=300;
+  const bSpeed=SPEED*4;
+  const b={x:me.x,y:me.y,vx:me.facing*bSpeed,vy:0,color:me.color,ownerId:myId,alpha:1};
+  bullets.push(b);
+  me.showGun=true;me.gunTimer=300;
+  socket.emit('bullet_spawn',{id:myId,x:b.x,y:b.y,vx:b.vx,vy:b.vy,color:b.color});
+}
+
+document.getElementById('jump-btn').addEventListener('touchstart',e=>{e.preventDefault();doJump();},{passive:false});
+document.getElementById('jump-btn').addEventListener('click',doJump);
+document.getElementById('push-btn').addEventListener('touchstart',e=>{e.preventDefault();doPush();},{passive:false});
+document.getElementById('push-btn').addEventListener('click',doPush);
+document.getElementById('gun-btn').addEventListener('touchstart',e=>{e.preventDefault();doShoot();},{passive:false});
+document.getElementById('gun-btn').addEventListener('click',doShoot);
+
+// ── 맵 그리기 ──
 function drawMap(){
   for(let r=0;r<map.length;r++){
     for(let c=0;c<map[0].length;c++){
@@ -365,10 +381,37 @@ function drawMap(){
   }
 }
 
+// ── 총 그리기 ──
+function drawGun(x,y,facing,color){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(facing,1);
+  // ㄱ 모양 총
+  ctx.fillStyle='#111';
+  ctx.fillRect(4,0,14,5);   // 총신
+  ctx.fillRect(14,-6,5,12); // 손잡이
+  ctx.restore();
+}
+
+// ── 플레이어 그리기 ──
 function drawPlayer(p,isMe){
+  if(p.dying){
+    // 깜빡거림
+    p.blinkTimer=(p.blinkTimer||0)+16;
+    if(Math.floor(p.blinkTimer/120)%2===0)return;
+  }
   const x=Math.round(p.x),y=Math.round(p.y),r=12;
   const jOff=p.jumpOffset||0;
   const knockAngle=p.knockback&&p.knockTimer>0?Math.PI/5*(p.facing||1)*-1:0;
+
+  // 대시 바람 이펙트
+  if(p.dashTrail&&p.dashTrail.length>0){
+    p.dashTrail.forEach((t,i)=>{
+      const a=t.alpha;
+      ctx.beginPath();ctx.arc(t.x,t.y,r*0.6,0,Math.PI*2);
+      ctx.fillStyle=`rgba(167,139,250,${a*0.3})`;ctx.fill();
+    });
+  }
 
   // 그림자
   ctx.beginPath();ctx.ellipse(x,y+r+2,r*0.8,4,0,0,Math.PI*2);
@@ -384,10 +427,30 @@ function drawPlayer(p,isMe){
   ctx.strokeStyle=isMe?'#ffffff':'#ffffffaa';
   ctx.lineWidth=isMe?2.5:1.5;ctx.stroke();
 
-  // 눈
+  // 밀치기 손 이펙트 (앞으로 나가는 작은 원)
+  if(p.punchFist&&p.punchFistTimer>0){
+    const ft=p.punchFistTimer/300;
+    const fx=(p.facing||1)*(r+10+ft*14);
+    ctx.beginPath();ctx.arc(fx,0,5,0,Math.PI*2);
+    ctx.fillStyle=p.color;ctx.fill();
+    ctx.strokeStyle='#ffffffaa';ctx.lineWidth=1;ctx.stroke();
+  }
+
+  // 눈 (피격 시 X눈)
   const eo=4*(p.facing||1);
-  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(eo,-2,3.5,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#1a1a2e';ctx.beginPath();ctx.arc(eo+(p.facing||1),-2,1.8,0,Math.PI*2);ctx.fill();
+  if(p.eyeHurt){
+    ctx.strokeStyle='#fff';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(eo-3,-4);ctx.lineTo(eo+3,2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(eo+3,-4);ctx.lineTo(eo-3,2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(eo+5,-4);ctx.lineTo(eo+11,2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(eo+11,-4);ctx.lineTo(eo+5,2);ctx.stroke();
+  } else {
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(eo,-2,3.5,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#1a1a2e';ctx.beginPath();ctx.arc(eo+(p.facing||1),-2,1.8,0,Math.PI*2);ctx.fill();
+  }
+
+  // 총 표시
+  if(p.showGun)drawGun(0,2,p.facing||1,p.color);
 
   ctx.restore();
 
@@ -396,44 +459,88 @@ function drawPlayer(p,isMe){
   ctx.fillStyle=isMe?'#fff':'#ffffffcc';
   ctx.fillText((p.name||'?')+(isMe?' ★':''),x,y-jOff-r-6);
 
-  // 이모트
-  if(p.emote){ctx.font='18px serif';ctx.fillText(p.emote,x+14,y-jOff-r-4);}
+  // 이모트 (닉네임 위, 위로 올라가며 흐려짐)
+  if(p.emote&&p.emoteAlpha>0){
+    ctx.globalAlpha=p.emoteAlpha;
+    ctx.font='20px serif';ctx.textAlign='center';
+    ctx.fillText(p.emote,x,y-jOff-r-22-(p.emoteY||0));
+    ctx.globalAlpha=1;
+  }
 
   // 채팅 말풍선
   if(p.chatMsg){
     ctx.font='12px "Nanum Gothic"';
     const tw=Math.min(ctx.measureText(p.chatMsg).width+14,180);
-    const bx=x-tw/2,by=y-jOff-r-34;
-    ctx.fillStyle='#ffffffee';
-    ctx.beginPath();ctx.roundRect(bx,by,tw,20,5);ctx.fill();
+    const bx=x-tw/2,by=y-jOff-r-36;
+    ctx.fillStyle='#ffffffee';ctx.beginPath();ctx.roundRect(bx,by,tw,20,5);ctx.fill();
     ctx.fillStyle='#1a1a2e';
     const short=p.chatMsg.length>20?p.chatMsg.slice(0,20)+'…':p.chatMsg;
     ctx.fillText(short,x,by+14);
   }
+
+  // 피격 횟수 표시 (1이상)
+  if((p.hitCount||0)>0){
+    ctx.font='bold 10px "Jua"';ctx.textAlign='center';
+    ctx.fillStyle='#fbbf24';
+    ctx.fillText('💥'.repeat(Math.min(p.hitCount,5)),x,y-jOff+r+14);
+  }
+}
+
+// ── 총알 그리기 ──
+function drawBullets(){
+  bullets.forEach(b=>{
+    ctx.save();
+    ctx.globalAlpha=b.alpha;
+    ctx.fillStyle=b.color;
+    const w=18,h=5;
+    const bx=b.vx>0?b.x:b.x-w;
+    ctx.fillRect(bx,b.y-h/2,w,h);
+    // 글로우
+    ctx.shadowColor=b.color;ctx.shadowBlur=8;
+    ctx.fillRect(bx,b.y-h/2,w,h);
+    ctx.restore();
+  });
 }
 
 // ── 게임 루프 ──
-const SPEED=2.2, JUMP_HEIGHT=40, JUMP_DUR=800;
-let lastTime=0, lastSent={x:0,y:0,facing:1,jumpOffset:0};
-let spacePrev=false, zPrev=false, xPrev=false;
+let lastTime=0,lastSent={x:0,y:0,facing:1,jumpOffset:0};
+let spacePrev=false,zPrev=false,cPrev=false;
 
 function loop(ts){
   const dt=Math.min(ts-lastTime,50);lastTime=ts;
   const me=players[myId];
 
-  if(me&&!nickFocused&&!chatActive){
+  gunCooldown=Math.max(0,gunCooldown-dt);
+  dashCooldown=Math.max(0,dashCooldown-dt);
+
+  if(me&&!nickFocused&&!chatActive&&!me.dying){
     const T=0.2;
-    const goLeft=keys['ArrowLeft']||keys['KeyA']||joy.dx<-T;
-    const goRight=keys['ArrowRight']||keys['KeyD']||joy.dx>T;
-    const goUp=keys['ArrowUp']||keys['KeyW']||joy.dy<-T;
-    const goDown=keys['ArrowDown']||keys['KeyS']||joy.dy>T;
+    const goLeft=keys['ArrowLeft']||joy.dx<-T;
+    const goRight=keys['ArrowRight']||joy.dx>T;
+    const goUp=keys['ArrowUp']||joy.dy<-T;
+    const goDown=keys['ArrowDown']||joy.dy>T;
+
+    // 대시
+    if(keys['_dashTrigger']&&dashCooldown<=0){
+      const dc=keys['_dashTrigger'];
+      const dashDist=TILE*2.5;
+      if(dc==='ArrowLeft'){if(tryMove(me,-dashDist,0))me.x-=dashDist;me.facing=-1;}
+      if(dc==='ArrowRight'){if(tryMove(me,dashDist,0))me.x+=dashDist;me.facing=1;}
+      if(dc==='ArrowUp'){if(tryMove(me,0,-dashDist))me.y-=dashDist;}
+      if(dc==='ArrowDown'){if(tryMove(me,0,dashDist))me.y+=dashDist;}
+      dashCooldown=1500;
+      // 바람 트레일
+      if(!me.dashTrail)me.dashTrail=[];
+      for(let i=0;i<6;i++) me.dashTrail.push({x:me.x-me.facing*i*8,y:me.y,alpha:0.8-i*0.12});
+      keys['_dashTrigger']=null;
+    }
 
     if(keys['Space']&&!spacePrev)doJump();
     spacePrev=keys['Space'];
     if(keys['KeyZ']&&!zPrev)doPush();
     zPrev=keys['KeyZ'];
-    if(keys['KeyX']&&!xPrev)triggerEmote();
-    xPrev=keys['KeyX'];
+    if(keys['KeyC']&&!cPrev)doShoot();
+    cPrev=keys['KeyC'];
 
     // 점프
     if(me.jumping){
@@ -443,7 +550,7 @@ function loop(ts){
       if(me.jumpTime>=JUMP_DUR){me.jumping=false;me.jumpOffset=0;me.jumpTime=0;}
     }
 
-    // 이동 (넘어진 중 불가)
+    // 이동
     if(!me.knockback){
       const sx=Math.abs(joy.dx)>T?SPEED*Math.min(Math.abs(joy.dx)*1.5,1):SPEED;
       const sy=Math.abs(joy.dy)>T?SPEED*Math.min(Math.abs(joy.dy)*1.5,1):SPEED;
@@ -457,15 +564,28 @@ function loop(ts){
     if(me.knockback){
       me.knockTimer=(me.knockTimer||0)-dt;
       if(me.pushVx){
-        if(tryMove(me,me.pushVx*0.14,0))me.x+=me.pushVx*0.14;
+        if(tryMove(me,me.pushVx*0.13,0))me.x+=me.pushVx*0.13;
         if(tryMove(me,0,me.pushVy*0.1))me.y+=me.pushVy*0.1;
-        me.pushVx*=0.85;me.pushVy*=0.85;
+        me.pushVx*=0.82;me.pushVy*=0.82;
       }
       if(me.knockTimer<=0){me.knockback=false;me.pushVx=0;me.pushVy=0;}
     }
 
-    if(me.emoteTimer>0){me.emoteTimer-=dt;if(me.emoteTimer<=0)me.emote='';}
+    if(me.emoteTimer>0){
+      me.emoteTimer-=dt;
+      me.emoteY=(me.emoteY||0)+dt*0.02;
+      me.emoteAlpha=Math.max(0,me.emoteTimer/1000);
+      if(me.emoteTimer<=0){me.emote='';me.emoteAlpha=0;}
+    }
     if(me.chatTimer>0){me.chatTimer-=dt;if(me.chatTimer<=0)me.chatMsg='';}
+    if(me.gunTimer>0){me.gunTimer-=dt;if(me.gunTimer<=0)me.showGun=false;}
+    if(me.punchFistTimer>0){me.punchFistTimer-=dt;if(me.punchFistTimer<=0)me.punchFist=false;}
+
+    // 대시 트레일 페이드
+    if(me.dashTrail){
+      me.dashTrail.forEach(t=>t.alpha-=dt*0.0015);
+      me.dashTrail=me.dashTrail.filter(t=>t.alpha>0);
+    }
 
     resolvePlayerCollisions();
 
@@ -476,16 +596,63 @@ function loop(ts){
     }
   }
 
-  // 다른 플레이어 타이머
+  // 리스폰 처리
+  if(me&&me.dying){
+    me.dyingTimer=(me.dyingTimer||0)-dt;
+    me.blinkTimer=(me.blinkTimer||0)+dt;
+    if(me.dyingTimer<=0){
+      me.dying=false;me.blinkTimer=0;me.hitCount=0;me.knockback=false;
+      me.x=280+Math.random()*80;me.y=180+Math.random()*60;
+      me.eyeHurt=false;
+    }
+  }
+
+  // 다른 플레이어 업데이트
   for(const[id,p] of Object.entries(players)){
     if(id===myId)continue;
+    if(p.dying){p.dyingTimer=(p.dyingTimer||0)-dt;if(p.dyingTimer<=0){p.dying=false;p.blinkTimer=0;p.hitCount=0;p.eyeHurt=false;}}
     if(p.knockback&&p.knockTimer>0){p.knockTimer-=dt;if(p.knockTimer<=0){p.knockback=false;}}
-    if(p.emoteTimer>0){p.emoteTimer-=dt;if(p.emoteTimer<=0)p.emote='';}
+    if(p.emoteTimer>0){p.emoteTimer-=dt;p.emoteY=(p.emoteY||0)+dt*0.02;p.emoteAlpha=Math.max(0,p.emoteTimer/1000);if(p.emoteTimer<=0){p.emote='';p.emoteAlpha=0;}}
     if(p.chatTimer>0){p.chatTimer-=dt;if(p.chatTimer<=0)p.chatMsg='';}
+    if(p.gunTimer>0){p.gunTimer-=dt;if(p.gunTimer<=0)p.showGun=false;}
+    if(p.punchFistTimer>0){p.punchFistTimer-=dt;if(p.punchFistTimer<=0)p.punchFist=false;}
+  }
+
+  // 총알 업데이트
+  for(let i=bullets.length-1;i>=0;i--){
+    const b=bullets[i];
+    b.x+=b.vx; b.y+=b.vy;
+    // 벽 충돌
+    if(isWall(Math.floor(b.x/TILE),Math.floor(b.y/TILE))){bullets.splice(i,1);continue;}
+    // 플레이어 충돌
+    let hit=false;
+    for(const[id,p] of Object.entries(players)){
+      if(id===b.ownerId||p.dying)continue;
+      const dx=p.x-b.x,dy=p.y-b.y;
+      if(Math.sqrt(dx*dx+dy*dy)<14){
+        if(id===myId){
+          // 내가 맞았을 때
+          socket.emit('bullet_hit',{targetId:id});
+          p.pushVx=(b.vx>0?1:-1)*9*1.5;p.pushVy=-3;
+          p.knockback=true;p.knockTimer=800;p.eyeHurt=true;
+          startRespawn(id);
+        } else if(b.ownerId===myId){
+          socket.emit('bullet_hit',{targetId:id});
+          p.pushVx=(b.vx>0?1:-1)*9*1.5;p.pushVy=-3;
+          p.knockback=true;p.knockTimer=800;p.eyeHurt=true;
+          startRespawn(id);
+        }
+        bullets.splice(i,1);hit=true;break;
+      }
+    }
+    if(hit)continue;
+    // 범위 벗어남
+    if(b.x<0||b.x>BASE_W||b.y<0||b.y>BASE_H)bullets.splice(i,1);
   }
 
   ctx.clearRect(0,0,canvas.width,canvas.height);
   drawMap();
+  drawBullets();
   Object.values(players).sort((a,b)=>a.y-b.y).forEach(p=>drawPlayer(p,p.id===myId));
   requestAnimationFrame(loop);
 }
