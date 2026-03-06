@@ -4,12 +4,30 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>아지트 🏠</title>
 <script src="/socket.io/socket.io.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Gothic:wght@400;700&display=swap');
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   body{background:#1a1a2e;font-family:'Nanum Gothic',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100vw;height:100vh;overflow:hidden;user-select:none;touch-action:none;}
+
+  #rotate-msg{display:none;}
+  @keyframes rspin{from{transform:rotate(-25deg);}to{transform:rotate(25deg);}}
+
+  /* 세로 모드 강제 가로 회전 */
+  @media(orientation:portrait){
+    html{
+      transform: rotate(90deg);
+      transform-origin: left top;
+      width: 100vh;
+      height: 100vw;
+      overflow: hidden;
+      position: absolute;
+      top: 100%;
+      left: 0;
+    }
+  }
   #game-wrap{position:relative;border-radius:16px;overflow:hidden;box-shadow:0 0 40px #6d28d966,0 0 0 2px #7c3aed44;}
   canvas{display:block;}
 
@@ -71,6 +89,12 @@
 </style>
 </head>
 <body>
+<!-- 세로 모드 안내 -->
+<div id="rotate-msg">
+  <span class="r-icon">📱</span>
+  <span class="r-text">가로로 돌려주세요!</span>
+</div>
+
 <div style="position:relative;">
   <!-- 이모트 바 PC -->
   <div id="emote-bar">
