@@ -34,7 +34,8 @@ io.on('connection', (socket) => {
 
   console.log(`접속: ${socket.id} (총 ${Object.keys(players).length}명)`);
 
-  socket.emit('init', { id: socket.id, players });
+  // 깊은 복사로 전송해서 클라이언트가 내 캐릭터 포함 확실히 받도록
+  socket.emit('init', { id: socket.id, players: JSON.parse(JSON.stringify(players)) });
   socket.broadcast.emit('playerJoined', players[socket.id]);
 
   socket.on('move', (data) => {
