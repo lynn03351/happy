@@ -159,6 +159,7 @@ const SPAWN_X=288, SPAWN_Y=96; // col=9, row=3 빈 칸
 
 // 타일: 0=바닥, 1=벽, 2=소파, 3=선반, 4=러그
 // 5=카드테이블(충돌), 6=의자위, 7=의자아래, 8=의자좌, 9=의자우
+// 맵 20x12, 중앙 = col 9~11, row 5~6 부근
 const map=[
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -166,7 +167,7 @@ const map=[
   [1,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,1],
   [1,0,0,0,0,4,4,4,4,4,0,0,0,0,0,0,0,0,0,1],
   [1,0,0,0,0,4,4,4,4,4,0,0,0,6,0,0,0,0,0,1],
-  [1,0,0,0,0,4,4,4,4,4,0,8,5,5,5,9,0,0,0,1],
+  [1,0,0,0,0,4,4,4,4,4,8,5,5,5,9,0,0,0,0,1],
   [1,0,0,0,0,0,0,0,0,0,0,0,0,7,0,0,0,0,0,1],
   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -176,8 +177,11 @@ const map=[
 
 // ── 이미지 로딩 ──
 const imgs={};
+let imgsLoaded=0, imgsTotal=5;
 function loadImg(key,src){
   const img=new Image();
+  img.onload=()=>{ imgsLoaded++; };
+  img.onerror=()=>{ imgsLoaded++; console.warn('이미지 로드 실패:',src); };
   img.src=src;
   imgs[key]=img;
 }
@@ -439,46 +443,51 @@ function drawMap(){
     }
   }
 
-  // 이미지 오브젝트 렌더링 (바닥 위)
-  // 1단계: 위 의자 (테이블 뒤에 위치하므로 먼저 그림)
+  // 1단계: 위 의자, 좌 의자, 우 의자 (테이블보다 뒤)
   for(let r=0;r<map.length;r++){
     for(let c=0;c<map[0].length;c++){
       const t=map[r][c],x=c*TILE,y=r*TILE;
-      // 의자위(6): 64x74, 타일 중앙에 맞춤
-      if(t===6&&imgs.chair_up?.complete)
-        ctx.drawImage(imgs.chair_up, x+(TILE/2)-32, y+(TILE/2)-52, 64, 74);
-      // 의자좌(8): 64x64
-      if(t===8&&imgs.chair_left?.complete)
-        ctx.drawImage(imgs.chair_left, x+(TILE/2)-48, y+(TILE/2)-32, 64, 64);
-      // 의자우(9): 64x64
-      if(t===9&&imgs.chair_right?.complete)
-        ctx.drawImage(imgs.chair_right, x+(TILE/2)-16, y+(TILE/2)-32, 64, 64);
-    }
-  }
-
-  // 2단계: 테이블 (위 의자 앞에 그림)
-  for(let r=0;r<map.length;r++){
-    for(let c=0;c<map[0].length;c++){
-      const t=map[r][c],x=c*TILE,y=r*TILE;
-      if(t===5&&imgs.table?.complete){
-        // 테이블 왼쪽 시작 칸만 그리기
-        if(c===0||map[r][c-1]!==5){
-          let w=0;
-          for(let cc=c;cc<map[0].length&&map[r][cc]===5;cc++)w++;
-          // 원본 96x64 → 3타일(96px) 너비, 위로 30px 올려서 테이블 상판이 타일에 걸치게
-          ctx.drawImage(imgs.table, x, y-30, w*TILE, 70);
-        }
+      if(t===6){ // 의자위 64x74: 타일 중앙 기준
+        if(imgs.chair_up.complete && imgs.chair_up.naturalWidth>0)
+          ctx.drawImage(imgs.chair_up, x-16, y-26, 64, 74);
+        else { ctx.fillStyle='#2d4a2d';ctx.fillRect(x,y,TILE,TILE); }
+      }
+      if(t===8){ // 의자좌 64x64
+        if(imgs.chair_left.complete && imgs.chair_left.naturalWidth>0)
+          ctx.drawImage(imgs.chair_left, x-16, y-16, 64, 64);
+        else { ctx.fillStyle='#2d4a2d';ctx.fillRect(x,y,TILE,TILE); }
+      }
+      if(t===9){ // 의자우 64x64
+        if(imgs.chair_right.complete && imgs.chair_right.naturalWidth>0)
+          ctx.drawImage(imgs.chair_right, x-16, y-16, 64, 64);
+        else { ctx.fillStyle='#2d4a2d';ctx.fillRect(x,y,TILE,TILE); }
       }
     }
   }
 
-  // 3단계: 아래 의자 (테이블 앞에 나와 보여야 함)
+  // 2단계: 테이블 (의자위보다 앞)
   for(let r=0;r<map.length;r++){
     for(let c=0;c<map[0].length;c++){
       const t=map[r][c],x=c*TILE,y=r*TILE;
-      // 의자아래(7): 64x74
-      if(t===7&&imgs.chair_down?.complete)
-        ctx.drawImage(imgs.chair_down, x+(TILE/2)-32, y+(TILE/2)-20, 64, 74);
+      if(t===5 && (c===0||map[r][c-1]!==5)){
+        let w=0;
+        for(let cc=c;cc<map[0].length&&map[r][cc]===5;cc++)w++;
+        if(imgs.table.complete && imgs.table.naturalWidth>0)
+          ctx.drawImage(imgs.table, x, y-32, w*TILE, 70);
+        else { ctx.fillStyle='#1a5c1a';ctx.fillRect(x,y,w*TILE,TILE); }
+      }
+    }
+  }
+
+  // 3단계: 아래 의자 (테이블보다 앞)
+  for(let r=0;r<map.length;r++){
+    for(let c=0;c<map[0].length;c++){
+      const t=map[r][c],x=c*TILE,y=r*TILE;
+      if(t===7){ // 의자아래 64x74
+        if(imgs.chair_down.complete && imgs.chair_down.naturalWidth>0)
+          ctx.drawImage(imgs.chair_down, x-16, y-10, 64, 74);
+        else { ctx.fillStyle='#2d4a2d';ctx.fillRect(x,y,TILE,TILE); }
+      }
     }
   }
 }
