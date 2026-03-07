@@ -155,10 +155,10 @@ styleEl.textContent=`
 document.head.appendChild(styleEl);
 
 const TILE=32;
-const SPAWN_X=300, SPAWN_Y=200;
+const SPAWN_X=320, SPAWN_Y=160;
 
 // 타일: 0=바닥, 1=벽, 2=소파, 3=선반, 4=러그
-// 5=카드테이블(충돌), 6=의자위, 7=의자아래, 8=의자좌, 9=의자우 (의자는 통과 가능)
+// 5=카드테이블(충돌), 6=의자위, 7=의자아래, 8=의자좌, 9=의자우
 const map=[
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -167,10 +167,10 @@ const map=[
   [1,0,0,0,0,4,4,4,4,4,0,0,0,0,0,0,0,0,0,1],
   [1,0,0,0,0,4,4,4,4,4,0,0,0,0,0,0,0,0,0,1],
   [1,0,0,0,0,4,4,4,4,4,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,6,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,8,5,5,5,9,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,7,0,0,0,0,0,0,1],
   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,6,0,0,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,8,5,5,5,9,0,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,7,0,0,0,0,0,0,0,0,0,0,0,0,1],
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
 ];
 
@@ -193,7 +193,16 @@ let myId=null;
 const players={};
 const bullets=[];
 
-socket.on('init',({id,players:all})=>{myId=id;Object.assign(players,all);for(const p of Object.values(players))p.hitCount=p.hitCount||0;updateCount();});
+socket.on('init',({id,players:all})=>{
+  myId=id;
+  Object.assign(players,all);
+  for(const p of Object.values(players))p.hitCount=p.hitCount||0;
+  // 내 캐릭터가 없으면 기본값으로 생성
+  if(!players[myId]){
+    players[myId]={id:myId,x:SPAWN_X,y:SPAWN_Y,color:'#f87171',name:'나',facing:1,emote:'',jumpOffset:0,hitCount:0};
+  }
+  updateCount();
+});
 socket.on('playerJoined',p=>{players[p.id]={...p,hitCount:0};updateCount();});
 socket.on('playerLeft',id=>{delete players[id];updateCount();});
 socket.on('playerMoved',({id,x,y,facing,jumpOffset})=>{if(!players[id])return;players[id].x=x;players[id].y=y;players[id].facing=facing;players[id].jumpOffset=jumpOffset||0;});
@@ -434,14 +443,13 @@ function drawMap(){
     for(let c=0;c<map[0].length;c++){
       const t=map[r][c],x=c*TILE,y=r*TILE;
       if(t===6&&imgs.chair_up?.complete){
-        // 상 의자: 64x74 → 2칸 너비로
-        ctx.drawImage(imgs.chair_up, x-16, y-10, 64, 74);
+        ctx.drawImage(imgs.chair_up, x-16, y-16, 64, 74);
       }
       if(t===8&&imgs.chair_left?.complete){
-        ctx.drawImage(imgs.chair_left, x-8, y-6, 64, 64);
+        ctx.drawImage(imgs.chair_left, x-8, y-8, 64, 64);
       }
       if(t===9&&imgs.chair_right?.complete){
-        ctx.drawImage(imgs.chair_right, x-16, y-6, 64, 64);
+        ctx.drawImage(imgs.chair_right, x-16, y-8, 64, 64);
       }
     }
   }
@@ -451,12 +459,11 @@ function drawMap(){
     for(let c=0;c<map[0].length;c++){
       const t=map[r][c],x=c*TILE,y=r*TILE;
       if(t===5&&imgs.table?.complete){
-        // 테이블 시작 칸인지 확인 (왼쪽이 테이블이 아닐 때)
         if(c===0||map[r][c-1]!==5){
-          // 테이블 너비 계산
           let w=0;
           for(let cc=c;cc<map[0].length&&map[r][cc]===5;cc++)w++;
-          ctx.drawImage(imgs.table, x-4, y-28, w*TILE+8, 74);
+          // 테이블 이미지: 96x64 → 3타일 너비에 맞게
+          ctx.drawImage(imgs.table, x, y-20, w*TILE, 64);
         }
       }
     }
