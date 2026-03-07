@@ -26,8 +26,8 @@ io.on('connection', (socket) => {
 
   players[socket.id] = {
     id: socket.id,
-    x: 280 + Math.random() * 80,
-    y: 180 + Math.random() * 60,
+    x: 270 + Math.random() * 60,
+    y: 80 + Math.random() * 60,
     color, name: `플레이어${count+1}`, facing: 1,
     emote: '', jumpOffset: 0, hitCount: 0
   };
