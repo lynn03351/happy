@@ -155,7 +155,7 @@ styleEl.textContent=`
 document.head.appendChild(styleEl);
 
 const TILE=32;
-const SPAWN_X=320, SPAWN_Y=160;
+const SPAWN_X=96, SPAWN_Y=64;
 
 // 타일: 0=바닥, 1=벽, 2=소파, 3=선반, 4=러그
 // 5=카드테이블(충돌), 6=의자위, 7=의자아래, 8=의자좌, 9=의자우
@@ -165,11 +165,11 @@ const map=[
   [1,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,1],
   [1,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,3,3,0,1],
   [1,0,0,0,0,4,4,4,4,4,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,4,4,4,4,4,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,4,4,4,4,4,0,0,0,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,6,0,0,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,0,8,5,5,5,9,0,0,0,0,1],
-  [1,0,0,0,0,0,0,0,0,0,0,0,7,0,0,0,0,0,0,1],
+  [1,0,0,0,0,4,4,4,4,4,0,0,0,6,0,0,0,0,0,1],
+  [1,0,0,0,0,4,4,4,4,4,0,8,5,5,5,9,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,7,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+  [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
   [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
   [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
 ];
@@ -195,11 +195,13 @@ const bullets=[];
 
 socket.on('init',({id,players:all})=>{
   myId=id;
-  Object.assign(players,all);
-  for(const p of Object.values(players))p.hitCount=p.hitCount||0;
-  // 내 캐릭터가 없으면 기본값으로 생성
+  // 받은 플레이어 데이터 전부 복사
+  for(const [pid,p] of Object.entries(all)){
+    players[pid]={...p, hitCount:p.hitCount||0};
+  }
+  // 내 캐릭터가 없으면 기본값으로 보완
   if(!players[myId]){
-    players[myId]={id:myId,x:SPAWN_X,y:SPAWN_Y,color:'#f87171',name:'나',facing:1,emote:'',jumpOffset:0,hitCount:0};
+    players[myId]={id:myId,x:SPAWN_X,y:SPAWN_Y,color:'#f87171',name:'플레이어1',facing:1,emote:'',jumpOffset:0,hitCount:0};
   }
   updateCount();
 });
@@ -437,45 +439,46 @@ function drawMap(){
     }
   }
 
-  // 이미지 오브젝트는 바닥 위에 별도로 그리기 (깊이 정렬)
-  // 의자(위) - 테이블 앞에 그려야 하므로 먼저
+  // 이미지 오브젝트 렌더링 (바닥 위)
+  // 1단계: 위 의자 (테이블 뒤에 위치하므로 먼저 그림)
   for(let r=0;r<map.length;r++){
     for(let c=0;c<map[0].length;c++){
       const t=map[r][c],x=c*TILE,y=r*TILE;
-      if(t===6&&imgs.chair_up?.complete){
-        ctx.drawImage(imgs.chair_up, x-16, y-16, 64, 74);
-      }
-      if(t===8&&imgs.chair_left?.complete){
-        ctx.drawImage(imgs.chair_left, x-8, y-8, 64, 64);
-      }
-      if(t===9&&imgs.chair_right?.complete){
-        ctx.drawImage(imgs.chair_right, x-16, y-8, 64, 64);
-      }
+      // 의자위(6): 64x74, 타일 중앙에 맞춤
+      if(t===6&&imgs.chair_up?.complete)
+        ctx.drawImage(imgs.chair_up, x+(TILE/2)-32, y+(TILE/2)-52, 64, 74);
+      // 의자좌(8): 64x64
+      if(t===8&&imgs.chair_left?.complete)
+        ctx.drawImage(imgs.chair_left, x+(TILE/2)-48, y+(TILE/2)-32, 64, 64);
+      // 의자우(9): 64x64
+      if(t===9&&imgs.chair_right?.complete)
+        ctx.drawImage(imgs.chair_right, x+(TILE/2)-16, y+(TILE/2)-32, 64, 64);
     }
   }
 
-  // 테이블 (의자 위에 겹쳐 보이게)
+  // 2단계: 테이블 (위 의자 앞에 그림)
   for(let r=0;r<map.length;r++){
     for(let c=0;c<map[0].length;c++){
       const t=map[r][c],x=c*TILE,y=r*TILE;
       if(t===5&&imgs.table?.complete){
+        // 테이블 왼쪽 시작 칸만 그리기
         if(c===0||map[r][c-1]!==5){
           let w=0;
           for(let cc=c;cc<map[0].length&&map[r][cc]===5;cc++)w++;
-          // 테이블 이미지: 96x64 → 3타일 너비에 맞게
-          ctx.drawImage(imgs.table, x, y-20, w*TILE, 64);
+          // 원본 96x64 → 3타일(96px) 너비, 위로 30px 올려서 테이블 상판이 타일에 걸치게
+          ctx.drawImage(imgs.table, x, y-30, w*TILE, 70);
         }
       }
     }
   }
 
-  // 하 의자 (테이블 위에 그려야 앞에 보임)
+  // 3단계: 아래 의자 (테이블 앞에 나와 보여야 함)
   for(let r=0;r<map.length;r++){
     for(let c=0;c<map[0].length;c++){
       const t=map[r][c],x=c*TILE,y=r*TILE;
-      if(t===7&&imgs.chair_down?.complete){
-        ctx.drawImage(imgs.chair_down, x-16, y-8, 64, 74);
-      }
+      // 의자아래(7): 64x74
+      if(t===7&&imgs.chair_down?.complete)
+        ctx.drawImage(imgs.chair_down, x+(TILE/2)-32, y+(TILE/2)-20, 64, 74);
     }
   }
 }
