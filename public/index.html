@@ -74,6 +74,87 @@ canvas{display:block;}
   #key-hints{display:none;}
   #chat-wrap{width:180px;}
 }
+
+/* ── 원카드 UI ── */
+#card-overlay{
+  display:none;position:absolute;inset:0;z-index:200;
+  background:rgba(10,5,30,0.92);border-radius:16px;
+  flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  font-family:'Jua',sans-serif;
+}
+#card-overlay.visible{display:flex;}
+
+/* 좌석 대기 패널 */
+#seat-panel{display:flex;flex-direction:column;align-items:center;gap:8px;}
+#seat-title{font-size:1.1rem;color:#c4b5fd;}
+#seat-list{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.seat-item{background:#2d1b69;border:1px solid #7c3aed;border-radius:8px;padding:4px 12px;color:#e0d7ff;font-size:0.8rem;}
+#seat-btn{background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:8px 20px;font-family:'Jua',sans-serif;font-size:0.9rem;cursor:pointer;}
+#seat-btn:hover{background:#6d28d9;}
+#start-game-btn{display:none;background:#059669;color:#fff;border:none;border-radius:8px;padding:8px 20px;font-family:'Jua',sans-serif;font-size:0.9rem;cursor:pointer;}
+#start-game-btn:hover{background:#047857;}
+
+/* 게임 화면 */
+#game-panel{display:none;flex-direction:column;align-items:center;gap:8px;width:100%;}
+#opponents-area{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;}
+.opponent-box{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.opponent-name{font-size:0.7rem;color:#a78bfa;}
+.opponent-cards{display:flex;gap:2px;}
+.card-back{width:32px;height:46px;background:linear-gradient(135deg,#1e3a8a,#3730a3);border:1px solid #818cf8;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:1rem;}
+
+#center-area{display:flex;flex-direction:column;align-items:center;gap:6px;}
+#top-card-area{display:flex;align-items:center;gap:12px;}
+#deck-pile{width:50px;height:72px;background:linear-gradient(135deg,#1e3a8a,#3730a3);border:2px solid #818cf8;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;cursor:pointer;transition:transform 0.1s;}
+#deck-pile:hover{transform:scale(1.06);}
+#deck-pile.disabled{opacity:0.4;cursor:default;transform:none;}
+#top-card{width:50px;height:72px;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid #fff4;font-size:1rem;font-weight:bold;gap:2px;}
+
+#turn-info{font-size:0.8rem;color:#fbbf24;background:#1a1a2ecc;border-radius:6px;padding:4px 12px;}
+#draw-stack-info{font-size:0.75rem;color:#f87171;}
+
+/* 내 패 */
+#my-hand{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;max-width:580px;padding:4px;}
+.hand-card{
+  width:42px;height:60px;border-radius:6px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border:2px solid transparent;cursor:pointer;transition:transform 0.15s, border-color 0.15s;
+  font-weight:bold;font-size:0.75rem;gap:1px;background:#fff;
+}
+.hand-card:hover{transform:translateY(-8px);border-color:#fbbf24;}
+.hand-card.selected{transform:translateY(-12px);border-color:#f59e0b;box-shadow:0 0 12px #f59e0b88;}
+.hand-card.unplayable{opacity:0.45;cursor:default;}
+.hand-card.unplayable:hover{transform:none;}
+.hand-card .c-suit{font-size:1.1rem;}
+.hand-card .c-rank{font-size:0.8rem;}
+.card-red{color:#dc2626;}
+.card-black{color:#1a1a2e;}
+
+/* 색상 선택 */
+#color-picker{display:none;flex-direction:column;align-items:center;gap:8px;}
+#color-picker p{color:#c4b5fd;font-size:0.85rem;}
+#color-btns{display:flex;gap:8px;}
+.color-btn{width:44px;height:44px;border-radius:50%;border:3px solid #fff4;cursor:pointer;transition:transform 0.1s;}
+.color-btn:hover{transform:scale(1.15);border-color:#fff;}
+
+/* 게임 결과 */
+#result-panel{display:none;flex-direction:column;align-items:center;gap:12px;}
+#result-title{font-size:1.5rem;color:#fbbf24;}
+#result-msg{font-size:0.9rem;color:#e0d7ff;}
+#result-close{background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:8px 20px;font-family:'Jua',sans-serif;font-size:0.9rem;cursor:pointer;}
+
+/* 테이블 근처 힌트 */
+#table-hint{
+  display:none;position:absolute;z-index:150;
+  background:#1a1a2eee;border:1px solid #7c3aed88;border-radius:8px;
+  padding:6px 14px;font-family:'Jua',sans-serif;font-size:0.75rem;color:#c4b5fd;
+  pointer-events:none;
+}
+#sit-prompt{
+  display:none;position:absolute;left:50%;transform:translateX(-50%);bottom:52px;z-index:150;
+  background:#7c3aed;border-radius:8px;padding:6px 16px;
+  font-family:'Jua',sans-serif;font-size:0.8rem;color:#fff;cursor:pointer;
+  pointer-events:all;white-space:nowrap;
+}
 </style>
 </head>
 <body>
@@ -92,6 +173,56 @@ canvas{display:block;}
     <canvas id="canvas"></canvas>
     <div id="nickname-box"><span id="nick-label">닉네임</span><input id="name-input" maxlength="8" placeholder="입력후 Enter"/></div>
     <div id="player-count">👥 0 / 4</div>
+
+    <!-- 테이블 근처 앉기 버튼 -->
+    <div id="sit-prompt">🪑 F키로 앉기</div>
+
+    <!-- 원카드 오버레이 -->
+    <div id="card-overlay">
+      <!-- 좌석 대기 -->
+      <div id="seat-panel">
+        <div id="seat-title">🃏 카드 테이블</div>
+        <div id="seat-list"></div>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <button id="seat-btn">앉기</button>
+          <button id="stand-btn" style="background:#4b5563;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-family:'Jua',sans-serif;font-size:0.9rem;cursor:pointer;display:none;">일어나기</button>
+          <button id="start-game-btn">게임 시작 ▶</button>
+        </div>
+        <div id="close-overlay-btn" style="margin-top:6px;font-size:0.7rem;color:#6b7280;cursor:pointer;">닫기 (ESC)</div>
+      </div>
+
+      <!-- 게임 진행 -->
+      <div id="game-panel">
+        <div id="opponents-area"></div>
+        <div id="center-area">
+          <div id="turn-info">⏳ 대기 중...</div>
+          <div id="draw-stack-info"></div>
+          <div id="top-card-area">
+            <div id="deck-pile">🂠</div>
+            <div id="top-card"></div>
+          </div>
+        </div>
+        <!-- 색상 선택 (조커 후) -->
+        <div id="color-picker">
+          <p>낼 색상을 선택하세요</p>
+          <div id="color-btns">
+            <div class="color-btn" style="background:#dc2626;" data-color="red"></div>
+            <div class="color-btn" style="background:#2563eb;" data-color="blue"></div>
+            <div class="color-btn" style="background:#16a34a;" data-color="green"></div>
+            <div class="color-btn" style="background:#ca8a04;" data-color="yellow"></div>
+          </div>
+        </div>
+        <div id="my-hand"></div>
+      </div>
+
+      <!-- 결과 -->
+      <div id="result-panel">
+        <div id="result-title"></div>
+        <div id="result-msg"></div>
+        <button id="result-close">닫기</button>
+      </div>
+    </div>
+
     <div id="chat-wrap">
       <div id="chat-log"></div>
       <div id="chat-input-row">
@@ -103,7 +234,7 @@ canvas{display:block;}
       <span id="hint-toggle">P 키 도움말</span>
       <span class="k">방향키 이동 &nbsp;/&nbsp; 방향키×2 대시</span>
       <span class="k">Space 점프 &nbsp;|&nbsp; Z 밀치기 &nbsp;|&nbsp; C 총</span>
-      <span class="k">1~5 이모트 &nbsp;|&nbsp; Enter 채팅</span>
+      <span class="k">1~5 이모트 &nbsp;|&nbsp; F 테이블 앉기 &nbsp;|&nbsp; Enter 채팅</span>
     </div>
   </div>
 </div>
@@ -784,8 +915,302 @@ function loop(ts){
   drawMap();
   drawBullets();
   Object.values(players).sort((a,b)=>a.y-b.y).forEach(p=>drawPlayer(p,p.id===myId));
+  checkNearTable();
   requestAnimationFrame(loop);
 }
+// ── 원카드 게임 클라이언트 ──
+const TABLE_TILE_ROW = 6, TABLE_TILE_COL_START = 11, TABLE_TILE_COL_END = 14;
+const TABLE_PX_X = TABLE_TILE_COL_START * TILE + TILE * 1.5;
+const TABLE_PX_Y = TABLE_TILE_ROW * TILE + TILE / 2;
+const TABLE_RADIUS = 80; // 이 범위 안에 있으면 앉기 버튼 표시
+
+let nearTable = false;
+let isSeated = false;
+let gameActive = false;
+let myHand = [];
+let selectedCardIdx = -1;
+let currentGameState = null;
+let isMyTurn = false;
+let waitingForColor = false;
+
+const cardOverlay = document.getElementById('card-overlay');
+const seatPanel = document.getElementById('seat-panel');
+const gamePanel = document.getElementById('game-panel');
+const resultPanel = document.getElementById('result-panel');
+const sitPrompt = document.getElementById('sit-prompt');
+const seatList = document.getElementById('seat-list');
+const startGameBtn = document.getElementById('start-game-btn');
+const standBtn = document.getElementById('stand-btn');
+const seatBtn = document.getElementById('seat-btn');
+
+function showOverlay() { cardOverlay.classList.add('visible'); }
+function hideOverlay() { cardOverlay.classList.remove('visible'); seatPanel.style.display='flex'; gamePanel.style.display='none'; resultPanel.style.display='none'; }
+
+document.getElementById('close-overlay-btn').addEventListener('click', hideOverlay);
+document.getElementById('result-close').addEventListener('click', () => { hideOverlay(); });
+
+seatBtn.addEventListener('click', () => {
+  socket.emit('sit_down');
+  isSeated = true;
+  seatBtn.style.display = 'none';
+  standBtn.style.display = 'inline-block';
+});
+standBtn.addEventListener('click', () => {
+  socket.emit('stand_up');
+  isSeated = false;
+  seatBtn.style.display = 'inline-block';
+  standBtn.style.display = 'none';
+});
+startGameBtn.addEventListener('click', () => { socket.emit('start_game'); });
+
+// 좌석 업데이트
+socket.on('seated_update', ({ seated, names }) => {
+  seatList.innerHTML = '';
+  names.forEach((n, i) => {
+    const el = document.createElement('div');
+    el.className = 'seat-item';
+    el.textContent = '🪑 ' + n;
+    seatList.appendChild(el);
+  });
+});
+
+socket.on('can_start_game', ({ seated }) => {
+  startGameBtn.style.display = 'inline-block';
+});
+
+// 게임 시작
+socket.on('game_start', () => {
+  gameActive = true;
+  seatPanel.style.display = 'none';
+  gamePanel.style.display = 'flex';
+  resultPanel.style.display = 'none';
+  showOverlay();
+});
+
+// 게임 상태 업데이트
+socket.on('game_state', (state) => {
+  currentGameState = state;
+  myHand = state.yourHand || [];
+  isMyTurn = state.currentPlayer === myId;
+  waitingForColor = state.waitingForColor;
+  renderGameUI(state);
+});
+
+socket.on('one_card_declared', ({ playerId, name }) => {
+  addChat('🃏 원카드', `${name} 원카드!!`, '#fbbf24');
+});
+
+socket.on('game_over', ({ winnerId, winnerName }) => {
+  gameActive = false;
+  isSeated = false;
+  gamePanel.style.display = 'none';
+  resultPanel.style.display = 'flex';
+  const isWinner = winnerId === myId;
+  document.getElementById('result-title').textContent = isWinner ? '🎉 승리!' : '😢 패배...';
+  document.getElementById('result-msg').textContent = `${winnerName}님이 이겼어요!`;
+  seatBtn.style.display = 'inline-block';
+  standBtn.style.display = 'none';
+  startGameBtn.style.display = 'none';
+  selectedCardIdx = -1;
+});
+
+socket.on('game_aborted', ({ reason }) => {
+  gameActive = false;
+  isSeated = false;
+  gamePanel.style.display = 'none';
+  resultPanel.style.display = 'flex';
+  document.getElementById('result-title').textContent = '⚠️ 게임 중단';
+  document.getElementById('result-msg').textContent = reason;
+  seatBtn.style.display = 'inline-block';
+  standBtn.style.display = 'none';
+  startGameBtn.style.display = 'none';
+  selectedCardIdx = -1;
+});
+
+// ── 카드 렌더링 ──
+function suitSymbol(card) {
+  if (card.rank === 'Joker') return '🃏';
+  return card.suit;
+}
+function cardBg(card) {
+  if (card.rank === 'Joker') return '#1a1a2e';
+  return '#fff';
+}
+function cardTextClass(card) {
+  if (card.rank === 'Joker') return '';
+  return (card.suit === '♥' || card.suit === '♦') ? 'card-red' : 'card-black';
+}
+
+function renderTopCard(card, chosenColor) {
+  const el = document.getElementById('top-card');
+  if (!card) { el.textContent = ''; return; }
+  el.style.background = cardBg(card);
+  el.className = 'hand-card';
+  el.style.cursor = 'default';
+  el.style.transform = 'none';
+  const cls = cardTextClass(card);
+
+  // 색상 오버레이 (조커 후)
+  let colorDot = '';
+  if (chosenColor) {
+    const cmap = { red:'#dc2626', blue:'#2563eb', green:'#16a34a', yellow:'#ca8a04' };
+    colorDot = `<div style="width:10px;height:10px;border-radius:50%;background:${cmap[chosenColor]||'#888'};margin:2px auto;"></div>`;
+  }
+  el.innerHTML = `<span class="c-suit ${cls}">${suitSymbol(card)}</span><span class="c-rank ${cls}">${card.rank==='Joker'?'JKR':card.rank}</span>${colorDot}`;
+}
+
+function renderGameUI(state) {
+  // 상대방 패
+  const oppArea = document.getElementById('opponents-area');
+  oppArea.innerHTML = '';
+  for (const p of state.players) {
+    if (p.id === myId) continue;
+    const cnt = state.handCounts[p.id] || 0;
+    const box = document.createElement('div');
+    box.className = 'opponent-box';
+    const isTheirTurn = state.currentPlayer === p.id;
+    box.innerHTML = `
+      <div class="opponent-name" style="color:${p.color}">${p.name} ${isTheirTurn ? '◀ 차례' : ''}</div>
+      <div class="opponent-cards">${Array(Math.min(cnt,10)).fill('<div class="card-back">🂠</div>').join('')}</div>
+      <div style="font-size:0.65rem;color:#6b7280">${cnt}장</div>`;
+    oppArea.appendChild(box);
+  }
+
+  // 상단 카드
+  renderTopCard(state.topCard, state.chosenColor);
+
+  // 차례 표시
+  const turnEl = document.getElementById('turn-info');
+  if (isMyTurn) {
+    turnEl.textContent = '✨ 내 차례!';
+    turnEl.style.color = '#34d399';
+  } else {
+    const cp = state.players.find(p => p.id === state.currentPlayer);
+    turnEl.textContent = `⏳ ${cp?.name || '?'} 차례`;
+    turnEl.style.color = '#fbbf24';
+  }
+
+  // 드로우 스택
+  const dsEl = document.getElementById('draw-stack-info');
+  dsEl.textContent = state.drawStack > 0 ? `⚠️ +${state.drawStack} 카드 누적!` : '';
+
+  // 덱 버튼
+  const deckEl = document.getElementById('deck-pile');
+  if (isMyTurn && !waitingForColor) {
+    deckEl.classList.remove('disabled');
+  } else {
+    deckEl.classList.add('disabled');
+  }
+
+  // 색상 선택기
+  const cpEl = document.getElementById('color-picker');
+  cpEl.style.display = waitingForColor ? 'flex' : 'none';
+
+  // 내 패
+  renderHand(state);
+}
+
+function renderHand(state) {
+  const handEl = document.getElementById('my-hand');
+  handEl.innerHTML = '';
+  const top = state.topCard;
+
+  myHand.forEach((card, i) => {
+    const el = document.createElement('div');
+    el.className = 'hand-card';
+    el.style.background = cardBg(card);
+    const cls = cardTextClass(card);
+
+    const playable = isMyTurn && !waitingForColor && canPlayClient(card, top, state.chosenColor, state.drawStack);
+    if (!playable) el.classList.add('unplayable');
+    if (i === selectedCardIdx) el.classList.add('selected');
+
+    el.innerHTML = `<span class="c-suit ${cls}">${suitSymbol(card)}</span><span class="c-rank ${cls}">${card.rank==='Joker'?'JKR':card.rank}</span>`;
+    el.addEventListener('click', () => {
+      if (!isMyTurn || !playable) return;
+      if (card.rank === 'Joker') {
+        selectedCardIdx = i;
+        renderHand(state);
+        document.getElementById('color-picker').style.display = 'flex';
+        waitingForColor = true;
+      } else {
+        socket.emit('play_card', { cardIdx: i });
+        selectedCardIdx = -1;
+      }
+    });
+    handEl.appendChild(el);
+  });
+}
+
+// 클라이언트 낼 수 있는지 확인
+function canPlayClient(card, top, chosenColor, drawStack) {
+  if (!top) return false;
+  if (card.rank === 'Joker') return true;
+  const effectiveSuit = chosenColor || top.suit;
+  if (drawStack > 0) {
+    if (top.rank === '2' && card.rank === '2') return true;
+    if (top.rank === 'Joker' && card.rank === 'Joker') return true;
+    return false;
+  }
+  return card.suit === effectiveSuit || card.rank === top.rank;
+}
+
+// 덱 클릭 = 카드 뽑기
+document.getElementById('deck-pile').addEventListener('click', () => {
+  if (!isMyTurn || waitingForColor) return;
+  socket.emit('draw_card');
+  selectedCardIdx = -1;
+});
+
+// 색상 선택
+document.querySelectorAll('.color-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const color = btn.dataset.color;
+    if (selectedCardIdx >= 0) {
+      socket.emit('play_card', { cardIdx: selectedCardIdx, chosenColor: color });
+    } else {
+      socket.emit('choose_color', { color });
+    }
+    selectedCardIdx = -1;
+    waitingForColor = false;
+    document.getElementById('color-picker').style.display = 'none';
+  });
+});
+
+// ── 테이블 근처 감지 (게임 루프에서 호출) ──
+function checkNearTable() {
+  const me = players[myId];
+  if (!me) return;
+  const dx = me.x - TABLE_PX_X, dy = me.y - TABLE_PX_Y;
+  const dist = Math.sqrt(dx*dx + dy*dy);
+  const wasNear = nearTable;
+  nearTable = dist < TABLE_RADIUS;
+
+  if (nearTable && !gameActive) {
+    sitPrompt.style.display = 'block';
+    // 위치 업데이트
+    const wrap = document.getElementById('game-wrap');
+    const scaleX = wrap.offsetWidth / BASE_W;
+    sitPrompt.style.bottom = (BASE_H - TABLE_PX_Y) * scaleX + 10 + 'px';
+  } else {
+    sitPrompt.style.display = 'none';
+  }
+}
+
+// F키 or 버튼으로 앉기/오버레이 열기
+document.addEventListener('keydown', e => {
+  if (e.code === 'KeyF' && !chatActive && !nickFocused) {
+    if (nearTable || isSeated || gameActive) {
+      showOverlay();
+    }
+  }
+  if (e.code === 'Escape' && cardOverlay.classList.contains('visible') && !gameActive) {
+    hideOverlay();
+  }
+});
+
+sitPrompt.addEventListener('click', () => { if (nearTable || isSeated) showOverlay(); });
+
 requestAnimationFrame(ts=>{lastTime=ts;requestAnimationFrame(loop);});
 </script>
 </body>
